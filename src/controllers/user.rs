@@ -125,8 +125,7 @@ pub async fn get_user_by_id(store: Store, claims: Claims, user_id: i32)
     if claims.id.0 != user_id {
         return Err(warp::reject())
     }
-    let id = UserId(user_id);
-    match UserMac::get_by_id(store, id).await {
+    match UserMac::get_by_id(store, UserId(user_id)).await {
         Ok(user) =>
             {
                 let payload = PayloadWithData {

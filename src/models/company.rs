@@ -31,11 +31,13 @@ pub struct CompanyMac;
 pub trait CompanyActions {
     async fn create(store: Store, company_info: CompanyInfo)
         -> Result<Company, Error>;
-    async fn get(store: Store, company_email: &String)
+    async fn get_by_email(store: Store, company_email: &String)
                  -> Result<Company, Error>;
+    async fn get_by_id(store: Store, company_id: CompanyId)
+                          -> Result<Company, Error>;
     async fn list(store: Store)
                   -> Result<Vec<Company>, Error>;
-    async fn update(store: Store, company_info: CompanyInfo)
+    async fn update(store: Store, company: Company)
                     -> Result<Company, Error>;
     async fn delete(store: Store, company_id: CompanyId)
                     -> Result<bool, Error>;
@@ -54,10 +56,22 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn get(store: Store, company_email: &String)
+    async fn get_by_email(store: Store, company_email: &String)
                         -> Result<Company, Error>
     {
         match store.get_company_by_email(company_email).await {
+            Ok(company) => Ok(company),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
+        }
+    }
+
+    async fn get_by_id(store: Store, company_id: CompanyId)
+        -> Result<Company, Error>
+    {
+        match store.get_company_by_id(company_id).await {
             Ok(company) => Ok(company),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
@@ -78,10 +92,10 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn update(store: Store, company_info: CompanyInfo)
+    async fn update(store: Store, company: Company)
                         -> Result<Company, Error>
     {
-        match store.update_company(company_info).await {
+        match store.update_company(company).await {
             Ok(company) => Ok(company),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);

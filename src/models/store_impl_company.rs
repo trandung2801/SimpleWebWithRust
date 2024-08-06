@@ -15,7 +15,7 @@ pub trait CompanyStoreMethod {
                                -> Result<Company, Error>;
     async fn get_list_company(self)
                               -> Result<Vec<Company>, Error>;
-    async fn update_company(self, company_info: CompanyInfo)
+    async fn update_company(self, company: Company)
                             -> Result<Company, Error>;
     async fn delete_company(self, company_id: CompanyId)
                                      -> Result<bool, Error>;
@@ -25,6 +25,7 @@ impl CompanyStoreMethod for Store {
     async fn create_company(self, new_company: CompanyInfo)
                                 -> Result<Company, Error>
     {
+
         match sqlx::query("INSERT INTO companies (email, name, address, description, is_delete) \
                             VALUES ($1, $2, $3, $4, $5)\
                             RETURNING id, email, name, address, description, is_delete")
@@ -143,17 +144,19 @@ impl CompanyStoreMethod for Store {
         }
     }
 
-    async fn update_company(self, company_info: CompanyInfo)
+    async fn update_company(self, company: Company)
                                 -> Result<Company, Error>
     {
         match sqlx::query(
             "Update companies SET (email, name, address, description ) \
                             VALUES ($1, $2, $3, $4)\
+                            WHERE id = $5
                             RETURNING id, email, name, address, description, is_delete")
-            .bind(company_info.email)
-            .bind(company_info.name)
-            .bind(company_info.address)
-            .bind(company_info.description)
+            .bind(company.email)
+            .bind(company.name)
+            .bind(company.address)
+            .bind(company.description)
+            .bind(company.id.unwrap().0)
             .map(|row: PgRow| Company {
                 id: Some(CompanyId(row.get("id"))),
                 email:row.get("email"),

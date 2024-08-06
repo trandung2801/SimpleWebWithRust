@@ -1,9 +1,9 @@
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use crate::models::company::CompanyInfo;
-use crate::models::job::JobInfo;
-use crate::models::resume::ResumeInfo;
-use crate::models::role::RoleInfo;
+use crate::models::company::{Company, CompanyInfo};
+use crate::models::job::{Job, JobInfo};
+use crate::models::resume::{Resume, ResumeInfo};
+use crate::models::role::{Role, RoleInfo};
 use crate::models::user::UserInfo;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -13,6 +13,16 @@ pub enum Data {
     RoleInfo(RoleInfo),
     JobInfo(JobInfo),
     ResumeInfo(ResumeInfo),
+
+    Company(Company),
+    Role(Role),
+    Job(Job),
+    Resume(Resume),
+
+    ListCompany(Vec<Company>),
+    ListRole(Vec<Role>),
+    ListJob(Vec<Job>),
+    ListResume(Vec<Resume>),
 
     ListUserInfo(Vec<UserInfo>),
     ListCompanyInfo(Vec<CompanyInfo>),
