@@ -1,2 +1,5 @@
-pub mod userRoute;
-pub mod companyRoute;
+pub mod user;
+pub mod company;
+pub mod resume;
+pub mod job;
+pub mod role;

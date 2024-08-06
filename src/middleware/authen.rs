@@ -6,19 +6,23 @@ use warp:: {
     Filter
 };
 use handle_errors::Error;
-use crate::middleware::jwt::{Jwt, Claims};
+use crate::middleware::jwt::{Jwt, Claims, JwtActions};
+use crate::models::role::RoleId;
 
 const BEARER: &str = "Bearer";
 
-pub fn auth(is_admin: bool)
+pub fn auth(role: i32)
     -> impl Filter<Extract = (Claims,), Error = warp::Rejection> + Clone
 {
+    // headers_cloned()
+    //     .map(move |headers: HeaderMap<HeaderValue>| (role.clone(), headers))
+    //     .and_then(authorize)
     headers_cloned()
-        .map(move |headers: HeaderMap<HeaderValue>| (is_admin.clone(), headers))
-        .and_then(authorize)
+        .map(move |headers: HeaderMap<HeaderValue>| authorize(role.clone(), headers))
 }
 
-async fn authorize ((is_admin, headers): (bool, HeaderMap<HeaderValue>))
+// async fn authorize ((role, headers): (i32, HeaderMap<HeaderValue>))
+async fn authorize (role: i32, headers: HeaderMap<HeaderValue>)
     -> Result<Claims, warp::Rejection>
 {
     match jwt_from_header(&headers) {
@@ -29,7 +33,7 @@ async fn authorize ((is_admin, headers): (bool, HeaderMap<HeaderValue>))
                     if claims.exp < current_date_time.timestamp() as usize {
                         return Err(warp::reject())
                     }
-                    if claims.is_admin != is_admin {
+                    if claims.role.0 != role {
                         return Err(warp::reject())
                     };
                     Ok(claims)

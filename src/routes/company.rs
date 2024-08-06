@@ -1,13 +1,16 @@
 use warp::{Filter};
 use crate::middleware::authen::auth;
 use crate::models::store::Store;
-use crate::controllers::companyController;
-use crate::controllers::companyController::{create_company, delete_company, get_company, get_list_company, update_company};
-use crate::controllers::userController::register;
+use crate::controllers::company;
+use crate::controllers::company::{create_company, delete_company, get_company, get_list_company, update_company};
+use crate::controllers::user::register;
 
 pub fn company_route(base_path: &'static str, store: Store)
-                     -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    let company_path = warp::path(base_path).and(warp::path("v1")).and(warp::path("company"));
+                     -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
+{
+    let company_path = warp::path(base_path)
+                                                    .and(warp::path("v1"))
+                                                    .and(warp::path("company"));
     
     let store_filter = warp::any().map(move || store.clone());
 
@@ -15,6 +18,7 @@ pub fn company_route(base_path: &'static str, store: Store)
         .and(warp::path("createCompany"))
         .and(warp::post())
         .and(store_filter.clone())
+        .and(auth(1))
         .and(warp::body::json())
         .and_then(create_company);
 
@@ -36,7 +40,7 @@ pub fn company_route(base_path: &'static str, store: Store)
         .and(warp::path("updateCompany"))
         .and(warp::put())
         .and(store_filter.clone())
-        .and(auth(false))
+        .and(auth(1))
         .and(warp::body::json())
         .and_then(update_company);
 
@@ -44,7 +48,7 @@ pub fn company_route(base_path: &'static str, store: Store)
         .and(warp::path("deleteCompany"))
         .and(warp::delete())
         .and(store_filter.clone())
-        .and(auth(false))
+        .and(auth(1))
         .and(warp::body::json())
         .and_then(delete_company);
 

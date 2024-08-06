@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use crate::models::store::Store;
 use crate::models::user::AuthInfo;
 use handle_errors::Error;
+use crate::models::store_impl_company::CompanyStoreMethod;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Company {
@@ -10,6 +11,7 @@ pub struct Company {
     pub email: String,
     pub address: String,
     pub description: String,
+    pub is_delete: bool
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -21,12 +23,26 @@ pub struct CompanyInfo {
     pub name: String,
     pub address: String,
     pub description: String,
+    pub is_delete: bool
 }
 
 pub struct CompanyMac;
 
-impl CompanyMac {
-    pub async fn create(store: Store, company_info: CompanyInfo)
+pub trait CompanyActions {
+    async fn create(store: Store, company_info: CompanyInfo)
+        -> Result<Company, Error>;
+    async fn get(store: Store, company_email: &String)
+                 -> Result<Company, Error>;
+    async fn list(store: Store)
+                  -> Result<Vec<Company>, Error>;
+    async fn update(store: Store, company_info: CompanyInfo)
+                    -> Result<Company, Error>;
+    async fn delete(store: Store, company_id: CompanyId)
+                    -> Result<bool, Error>;
+}
+
+impl CompanyActions for CompanyMac {
+    async fn create(store: Store, company_info: CompanyInfo)
                         -> Result<Company, Error>
     {
         match store.create_company(company_info).await {
@@ -38,7 +54,7 @@ impl CompanyMac {
         }
     }
 
-    pub async fn get(store: Store, company_email: &String)
+    async fn get(store: Store, company_email: &String)
                         -> Result<Company, Error>
     {
         match store.get_company_by_email(company_email).await {
@@ -50,7 +66,7 @@ impl CompanyMac {
         }
     }
 
-    pub async fn list(store: Store)
+    async fn list(store: Store)
                         -> Result<Vec<Company>, Error>
     {
         match store.get_list_company().await {
@@ -62,8 +78,7 @@ impl CompanyMac {
         }
     }
 
-
-    pub async fn update(store: Store, company_info: CompanyInfo)
+    async fn update(store: Store, company_info: CompanyInfo)
                         -> Result<Company, Error>
     {
         match store.update_company(company_info).await {
@@ -75,10 +90,10 @@ impl CompanyMac {
         }
     }
 
-    pub async fn delete(store: Store, company_info: CompanyInfo)
+    async fn delete(store: Store, company_id: CompanyId)
                         -> Result<bool, Error>
     {
-        match store.delete_company_by_email(company_info).await {
+        match store.delete_company(company_id).await {
             Ok(is_delete) => Ok(is_delete),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);

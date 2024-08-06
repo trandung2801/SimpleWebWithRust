@@ -8,22 +8,20 @@ use tracing::{event, instrument, Level};
 use handle_errors::Error;
 use warp::http::StatusCode;
 use crate::middleware::jwt::{Jwt, Claims};
-use crate::models::company::{CompanyInfo, CompanyMac};
+use crate::models::company::{CompanyInfo, CompanyMac, CompanyActions};
 use crate::models::store::Store;
-
-// async fn valid_user(claims: Claims, company_info: CompanyInfo) -> bool{
-//
-// }
+use crate::models::user::{UserMac, UserActions};
 
 pub async fn create_company(store: Store, claims: Claims, company_info: CompanyInfo)
-                                 -> Result<impl warp::Reply, warp::Rejection>
+                            -> Result<impl warp::Reply, warp::Rejection>
 {
-    // valid_user(claims, company_info.clone());
+    //valid company
     let new_email = company_info.email;
     match CompanyMac::get(store.clone(), &new_email).await {
         Ok(res) => {
+            let status_code = StatusCode::BAD_REQUEST;
             let payload = json!({
-                "statusCode": 201,
+                "statusCode": status_code,
                 "message": "Email invalid",
             });
             return Ok(warp::reply::json(&payload))
@@ -34,13 +32,15 @@ pub async fn create_company(store: Store, claims: Claims, company_info: CompanyI
         email: new_email,
         name: company_info.name,
         address: company_info.address,
-        description: company_info.description
+        description: company_info.description,
+        is_delete: company_info.is_delete
     };
     match CompanyMac::create(store, new_company).await {
         Ok(res) =>
             {
+                let status_code = StatusCode::CREATED;
                 let payload = json!({
-                    "statusCode": 201,
+                    "statusCode": status_code,
                     "message": "Create company success",
                     "data": res
                 });
@@ -57,8 +57,9 @@ pub async fn get_company(store: Store, company_email: String)
     match CompanyMac::get(store, &company_email).await {
         Ok(company) =>
             {
+                let status_code = StatusCode::OK;
                 let payload = json!({
-                    "statusCode": 201,
+                    "statusCode": status_code,
                     "message": "get company success",
                      "data": company,
                 });
@@ -74,8 +75,9 @@ pub async fn get_list_company(store: Store)
     match CompanyMac::list(store).await {
         Ok(res) =>
             {
+                let status_code = StatusCode::OK;
                 let payload = json!({
-                    "statusCode": 201,
+                    "statusCode": status_code,
                     "message": "get list companies success",
                     "data": res
                 });
@@ -89,11 +91,24 @@ pub async fn get_list_company(store: Store)
 pub async fn update_company(store: Store, claims: Claims, company_update: CompanyInfo)
                                     -> Result<impl warp::Reply, warp::Rejection>
 {
+    let email = company_update.email.clone();
+    match CompanyMac::get(store.clone(), &email).await {
+        Ok(res) => {
+            let status_code = StatusCode::BAD_REQUEST;
+            let payload = json!({
+                "statusCode": status_code,
+                "message": "Email invalid",
+            });
+            return Ok(warp::reply::json(&payload))
+        }
+        _ => ()
+    }
     match CompanyMac::update(store, company_update).await {
         Ok(res) =>
             {
+                let status_code = StatusCode::OK;
                 let payload = json!({
-                    "statusCode": 201,
+                    "statusCode": status_code,
                     "message": "update company success",
                     "data": res
                 });
@@ -106,11 +121,13 @@ pub async fn update_company(store: Store, claims: Claims, company_update: Compan
 pub async fn delete_company(store: Store, claims: Claims, user_delete: CompanyInfo)
                                -> Result<impl warp::Reply, warp::Rejection>
 {
+
     match CompanyMac::delete(store, user_delete).await {
         Ok(_) =>
             {
+                let status_code = StatusCode::OK;
                 let payload = json!({
-                    "statusCode": 201,
+                    "statusCode": status_code,
                     "message": "delete user success",
                 });
                 Ok(warp::reply::json(&payload))

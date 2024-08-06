@@ -1,8 +1,8 @@
 use warp::{Filter};
-use crate::controllers::userController::{get_user, get_list_users,
-                                         register, login,
-                                         update_user, delete,
-                                         update_password, set_admin_role};
+use crate::controllers::user::{get_user_by_id, get_list_users,
+                               register, login,
+                               update_user, delete,
+                               update_password, set_admin_role};
 use crate::middleware::authen::auth;
 use crate::models::store::Store;
 
@@ -41,15 +41,16 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::path("user"))
         .and(warp::path("getUser"))
         .and(store_filter.clone())
+        .and(auth(2))
         .and(warp::path::param())
-        .and_then(get_user);
+        .and_then(get_user_by_id);
 
     let update_user_api = user_path
         .and(warp::path("user"))
         .and(warp::path("updateUser"))
         .and(warp::put())
         .and(store_filter.clone())
-        .and(auth(false))
+        .and(auth(2))
         .and(warp::body::json())
         .and_then(update_user);
 
@@ -58,7 +59,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::path("updatePassword"))
         .and(warp::put())
         .and(store_filter.clone())
-        .and(auth(false))
+        .and(auth(2))
         .and(warp::body::json())
         .and_then(update_password);
 
@@ -67,7 +68,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::path("updatePassword"))
         .and(warp::put())
         .and(store_filter.clone())
-        .and(auth(true))
+        .and(auth(1))
         .and(warp::body::json())
         .and_then(update_password);
 
@@ -76,7 +77,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::path("setAdmin"))
         .and(warp::put())
         .and(store_filter.clone())
-        .and(auth(true))
+        .and(auth(1))
         .and(warp::body::json())
         .and_then(set_admin_role);
 
@@ -85,7 +86,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::path("deleteUser"))
         .and(warp::delete())
         .and(store_filter.clone())
-        .and(auth(false))
+        .and(auth(2))
         .and(warp::body::json())
         .and_then(delete);
 

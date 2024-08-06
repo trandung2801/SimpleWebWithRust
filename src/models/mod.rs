@@ -1,4 +1,12 @@
 pub mod user;
 pub mod company;
 pub mod store;
-mod resume;
+pub mod resume;
+pub mod role;
+pub mod job;
+pub mod store_impl_user;
+pub mod store_impl_company;
+pub mod store_impl_resume;
+pub mod store_impl_role;
+pub mod store_impl_job;
+mod map_resume_job;

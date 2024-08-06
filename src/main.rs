@@ -2,10 +2,10 @@ use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
 use warp::multipart::Part;
 use handle_errors::return_error;
-use routes::userRoute::user_route;
+use routes::user::user_route;
 use crate::models::store;
 use crate::models::store::Store;
-use crate::routes::companyRoute::company_route;
+use crate::routes::company::company_route;
 
 mod models;
 mod routes;
