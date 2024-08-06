@@ -5,6 +5,10 @@ use crate::models::store::Store;
 use crate::models::store_impl_role::RoleStoreMethods;
 use crate::models::user::{CompanyId, UserId};
 
+
+pub const ADMIN_ROLE_ID: i32 = 1;
+pub const USER_ROLE_ID: i32 = 2;
+pub const HR_ROLE_ID: i32 = 3;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Role {
     pub id: Option<RoleId>,

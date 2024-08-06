@@ -4,6 +4,7 @@ use crate::models::store::Store;
 use crate::controllers::company;
 use crate::controllers::company::{create_company, delete_company, get_company, get_list_company, update_company};
 use crate::controllers::user::register;
+use crate::models::role::ADMIN_ROLE_ID;
 
 pub fn company_route(base_path: &'static str, store: Store)
                      -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
@@ -14,14 +15,16 @@ pub fn company_route(base_path: &'static str, store: Store)
     
     let store_filter = warp::any().map(move || store.clone());
 
+    ///
     let create_api = company_path
         .and(warp::path("createCompany"))
         .and(warp::post())
         .and(store_filter.clone())
-        .and(auth(1))
+        .and(auth(ADMIN_ROLE_ID))
         .and(warp::body::json())
         .and_then(create_company);
 
+    ///GET api/v1/company/listCompany
     let get_list_company_api = company_path
         .and(warp::get())
         .and(warp::path("listCompany"))
@@ -29,6 +32,7 @@ pub fn company_route(base_path: &'static str, store: Store)
         .and(store_filter.clone())
         .and_then(get_list_company);
 
+    ///GET api/v1/company/getCompany/:id
     let get_company_api = company_path
         .and(warp::get())
         .and(warp::path("getCompany"))
@@ -40,7 +44,7 @@ pub fn company_route(base_path: &'static str, store: Store)
         .and(warp::path("updateCompany"))
         .and(warp::put())
         .and(store_filter.clone())
-        .and(auth(1))
+        .and(auth(ADMIN_ROLE_ID))
         .and(warp::body::json())
         .and_then(update_company);
 
@@ -48,7 +52,7 @@ pub fn company_route(base_path: &'static str, store: Store)
         .and(warp::path("deleteCompany"))
         .and(warp::delete())
         .and(store_filter.clone())
-        .and(auth(1))
+        .and(auth(ADMIN_ROLE_ID))
         .and(warp::body::json())
         .and_then(delete_company);
 
