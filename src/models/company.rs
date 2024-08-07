@@ -18,18 +18,17 @@ pub struct Company {
 pub struct CompanyId(pub i32);
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct CompanyInfo {
+pub struct NewCompany {
     pub email: String,
     pub name: String,
     pub address: String,
     pub description: String,
-    pub is_delete: bool
 }
 
 pub struct CompanyMac;
 
 pub trait CompanyActions {
-    async fn create(store: Store, company_info: CompanyInfo)
+    async fn create(store: Store, new_company: NewCompany)
         -> Result<Company, Error>;
     async fn get_by_email(store: Store, company_email: &String)
                  -> Result<Company, Error>;
@@ -44,10 +43,10 @@ pub trait CompanyActions {
 }
 
 impl CompanyActions for CompanyMac {
-    async fn create(store: Store, company_info: CompanyInfo)
+    async fn create(store: Store, new_company: NewCompany)
                         -> Result<Company, Error>
     {
-        match store.create_company(company_info).await {
+        match store.create_company(new_company).await {
             Ok(new_company) => Ok(new_company),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);

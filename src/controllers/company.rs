@@ -9,19 +9,17 @@ use handle_errors::Error;
 use warp::http::StatusCode;
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::middleware::jwt::{Jwt, Claims};
-use crate::models::company::{CompanyInfo, CompanyMac, CompanyActions, Company, CompanyId};
+use crate::models::company::{CompanyMac, CompanyActions, Company, CompanyId, NewCompany};
 use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::role::ADMIN_ROLE_ID;
 use crate::models::store::Store;
 use crate::models::user::{UserMac, UserActions};
 
-
-
-pub async fn create_company(store: Store, claims: Claims, company_info: CompanyInfo)
+pub async fn create_company(store: Store, claims: Claims, new_company: NewCompany)
                             -> Result<impl warp::Reply, warp::Rejection>
 {
-    //valid company
-    let new_email = company_info.email;
+    //valid company,
+    let new_email = new_company.email;
     match CompanyMac::get_by_email(store.clone(), &new_email).await {
         Ok(res) => {
             // let status_code = StatusCode::BAD_REQUEST;
@@ -37,14 +35,13 @@ pub async fn create_company(store: Store, claims: Claims, company_info: CompanyI
         }
         _ => ()
     }
-    let new_company = CompanyInfo {
+    let company = NewCompany {
         email: new_email,
-        name: company_info.name,
-        address: company_info.address,
-        description: company_info.description,
-        is_delete: company_info.is_delete
+        name: new_company.name,
+        address: new_company.address,
+        description: new_company.description,
     };
-    match CompanyMac::create(store, new_company).await {
+    match CompanyMac::create(store, company).await {
         Ok(res) =>
             {
                 // let status_code = StatusCode::CREATED;
@@ -163,11 +160,15 @@ pub async fn delete_company(store: Store, claims: Claims, company: Company)
     match CompanyMac::delete(store, company.id.unwrap()).await {
         Ok(_) =>
             {
-                let status_code = StatusCode::OK;
-                let payload = json!({
-                    "statusCode": status_code,
-                    "message": "delete user success",
-                });
+                // let status_code = StatusCode::OK;
+                // let payload = json!({
+                //     "statusCode": status_code,
+                //     "message": "Delete Company success",
+                // });
+                let payload = PayloadNoData {
+                    status_code: StatusCode::OK,
+                    message: "Delete Company success".to_string()
+                };
                 Ok(warp::reply::json(&payload))
             }
         Err(e) => Err(warp::reject::custom(e)),

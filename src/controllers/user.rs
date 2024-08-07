@@ -288,7 +288,7 @@ pub async fn delete(store: Store, claims: Claims, user_delete: UserInfo)
             {
                 let payload = PayloadNoData {
                     status_code: StatusCode::OK,
-                    message: "Delete user success".to_string(),
+                    message: "Delete User Success".to_string(),
                 };
                 // let payload = json!({
                 //     "statusCode": 201,

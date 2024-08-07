@@ -34,7 +34,7 @@ pub trait RoleActions {
                        -> Result<Role, Error>;
     async fn list(store: Store)
                   -> Result<Vec<Role>, Error>;
-    async fn update(store: Store, role_info: RoleInfo)
+    async fn update(store: Store, role: Role)
                     -> Result<Role, Error>;
     async fn delete(store: Store, role_id: RoleId)
                     -> Result<bool, Error>;
@@ -77,10 +77,10 @@ impl RoleActions for RoleMac {
         }
     }
 
-    async fn update(store: Store, role_info: RoleInfo)
+    async fn update(store: Store, role: Role)
                         -> Result<Role, Error>
     {
-        match store.update_role(role_info).await {
+        match store.update_role(role).await {
             Ok(role) => Ok(role),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);

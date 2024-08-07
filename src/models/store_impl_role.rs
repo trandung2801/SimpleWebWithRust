@@ -14,7 +14,7 @@ pub trait RoleStoreMethods {
                             -> Result<Role, Error>;
     async fn get_list_roles(self)
                             -> Result<Vec<Role>, Error>;
-    async fn update_role(self, role_info: RoleInfo)
+    async fn update_role(self, role: Role)
                          -> Result<Role, Error>;
     async fn delete_role(self, role_id: RoleId)
                          -> Result<bool, Error>;
@@ -102,14 +102,15 @@ impl RoleStoreMethods for Store {
         }
     }
 
-    async fn update_role(self, role_info: RoleInfo)
+    async fn update_role(self, role: Role)
                              -> Result<Role, Error>
     {
         match sqlx::query(
-            "Update roles SET (role) \
-                            VALUES ($1)\
+            "Update roles SET role = $1\
+                            WHERE id = $2\
                             RETURNING id, role, is_delete")
-            .bind(role_info.role)
+            .bind(role.role)
+            .bind(role.id.unwrap().0)
             .map(|row: PgRow| Role {
                 id: Some(RoleId(row.get("id"))),
                 role: row.get("role"),

@@ -5,10 +5,10 @@ use sqlx::{
 use tracing::log::SetLoggerError;
 use handle_errors::Error;
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
-use crate::models::company::{Company, CompanyInfo, CompanyId};
+use crate::models::company::{Company, CompanyId};
 use crate::models::job::{Job, JobId, JobInfo};
 use crate::models::map_resume_job::{NewMapResumeJob, MapResumeJob, MapResumeJobId};
-use crate::models::resume::{Resume, ResumeId, ResumeInfo};
+use crate::models::resume::{Resume, ResumeId};
 use crate::models::role::{Role, RoleId, RoleInfo};
 
 #[derive(Debug, Clone)]
@@ -38,7 +38,7 @@ impl StoreActionBasic for Store {
 pub trait MapResumeJobMethods {
     async fn create_map_job_resume(self, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>;
     async fn get_list_job_by_resume(self, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>;
-    async fn get_list_resume_by_job(self, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>;
+    async fn get_list_resume_by_job_id(self, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>;
 }
 
 impl MapResumeJobMethods for Store {
@@ -99,9 +99,12 @@ impl MapResumeJobMethods for Store {
             }
         }
     }
-    async fn get_list_resume_by_job(self, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>
+    async fn get_list_resume_by_job_id(self, limit: Option<i32>, offset: i32, job_id: JobId)
+        -> Result<Vec<MapResumeJob>, Error>
     {
-        match sqlx::query("SELECT * FROM map_resume_job where job_id = $1")
+        match sqlx::query("SELECT * FROM map_resume_job LIMIT = $1 OFFSET = $2 where job_id = $3")
+            .bind(limit)
+            .bind(offset)
             .bind(job_id.0)
             .map(|row: PgRow| MapResumeJob {
                 id: Some(MapResumeJobId(row.get("id"))),
