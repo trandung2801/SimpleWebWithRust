@@ -1,18 +1,15 @@
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use crate::models::company::{Company, CompanyInfo};
-use crate::models::job::{Job, JobInfo};
-use crate::models::resume::{Resume, ResumeInfo};
-use crate::models::role::{Role, RoleInfo};
+use crate::models::company::{Company};
+use crate::models::job::{Job};
+use crate::models::resume::{Resume};
+use crate::models::role::{Role};
 use crate::models::user::UserInfo;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub enum Data {
     UserInfo(UserInfo),
-    CompanyInfo(CompanyInfo),
-    RoleInfo(RoleInfo),
-    JobInfo(JobInfo),
-    ResumeInfo(ResumeInfo),
+    ListUserInfo(Vec<UserInfo>),
 
     Company(Company),
     Role(Role),
@@ -24,11 +21,8 @@ pub enum Data {
     ListJob(Vec<Job>),
     ListResume(Vec<Resume>),
 
-    ListUserInfo(Vec<UserInfo>),
-    ListCompanyInfo(Vec<CompanyInfo>),
-    ListRoleInfo(Vec<RoleInfo>),
-    ListJobInfo(Vec<JobInfo>),
-    ListResumeInfo(Vec<ResumeInfo>),
+
+
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PayloadWithData {

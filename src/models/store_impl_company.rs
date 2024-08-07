@@ -3,11 +3,11 @@ use sqlx::{
     Row,
 };
 use handle_errors::Error;
-use crate::models::company::{Company, CompanyId, CompanyInfo};
+use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::store::Store;
 
 pub trait CompanyStoreMethod {
-    async fn create_company(self, new_company: CompanyInfo)
+    async fn create_company(self, new_company: NewCompany)
                             -> Result<Company, Error>;
     async fn get_company_by_email(self, company_email: &String)
                                   -> Result<Company, Error>;
@@ -22,7 +22,7 @@ pub trait CompanyStoreMethod {
 }
 
 impl CompanyStoreMethod for Store {
-    async fn create_company(self, new_company: CompanyInfo)
+    async fn create_company(self, new_company: NewCompany)
                                 -> Result<Company, Error>
     {
 

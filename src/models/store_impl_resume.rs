@@ -1,4 +1,4 @@
-use crate::models::resume::{ResumeInfo, Resume, ResumeId};
+use crate::models::resume::{Resume, ResumeId, NewResume};
 use crate::models::store::Store;
 
 use sqlx::{
@@ -9,21 +9,21 @@ use handle_errors::Error;
 use crate::models::user::UserId;
 
 pub trait ResumeStoreMethods {
-    async fn create_resume(self, new_resume: ResumeInfo)
+    async fn create_resume(self, new_resume: NewResume)
                            -> Result<Resume, Error>;
     async fn get_resume_by_id(self, resume_id: ResumeId)
                               -> Result<Resume, Error>;
     async fn get_resume_by_user_id(self, user_id: UserId)
                                    -> Result<Resume, Error>;
-    async fn get_list_resumes(self)
+    async fn get_list_resume_by_user_id(self, limit: Option<i32>, offset: i32, user_id: UserId)
                               -> Result<Vec<Resume>, Error>;
-    async fn update_resume(self, resume_info: ResumeInfo)
+    async fn update_resume(self, resume: Resume)
                            -> Result<Resume, Error>;
     async fn delete_resume(self, resume_id: ResumeId)
                                       -> Result<bool, Error>;
 }
 impl ResumeStoreMethods for Store {
-    async fn create_resume(self, new_resume: ResumeInfo)
+    async fn create_resume(self, new_resume: NewResume)
                                -> Result<Resume, Error>
     {
         match sqlx::query("INSERT INTO resumes (user_id, email, url, is_delete) \
@@ -113,10 +113,13 @@ impl ResumeStoreMethods for Store {
         }
     }
 
-    async fn get_list_resumes(self)
+    async fn get_list_resume_by_user_id(self, limit: Option<i32>, offset: i32, user_id: UserId)
                                   -> Result<Vec<Resume>, Error>
     {
-        match sqlx::query("SELECT * FROM RESUMES")
+        match sqlx::query("SELECT * FROM RESUMES LIMIT = $1 OFFSET = $2 WHERE user_id = $3")
+            .bind(limit)
+            .bind(offset)
+            .bind(user_id.0)
             .map(|row: PgRow| Resume {
                 id: Some(ResumeId(row.get("id"))),
                 user_id:UserId(row.get("user_id")),
@@ -135,16 +138,18 @@ impl ResumeStoreMethods for Store {
         }
     }
 
-    async fn update_resume(self, resume_info: ResumeInfo)
+    async fn update_resume(self, resume: Resume)
                                -> Result<Resume, Error>
     {
         match sqlx::query(
             "Update resumes SET (user_id, email, url) \
                             VALUES ($1, $2, $3)\
+                            WHERE id = $4\
                             RETURNING id, user_id, email, url, is_delete")
-            .bind(resume_info.user_id.0)
-            .bind(resume_info.email)
-            .bind(resume_info.url)
+            .bind(resume.user_id.0)
+            .bind(resume.email)
+            .bind(resume.url)
+            .bind(resume.id.unwrap().0)
             .map(|row: PgRow| Resume {
                 id: Some(ResumeId(row.get("id"))),
                 user_id:UserId(row.get("user_id")),

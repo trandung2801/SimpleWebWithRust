@@ -1,5 +1,5 @@
 use crate::models::company::CompanyId;
-use crate::models::job::{JobInfo, Job, JobId};
+use crate::models::job::{Job, JobId, NewJob};
 use crate::models::store::Store;
 
 use handle_errors::Error;
@@ -9,7 +9,7 @@ use sqlx::{
 };
 
 pub trait JobStoreMethods {
-    async fn create_job(self, new_job: JobInfo)
+    async fn create_job(self, new_job: NewJob)
                         -> Result<Job, Error>;
     async fn get_job_by_id(self, job_id: JobId)
                            -> Result<Job, Error>;
@@ -17,14 +17,14 @@ pub trait JobStoreMethods {
                                    -> Result<Job, Error>;
     async fn get_list_job(self)
                           -> Result<Vec<Job>, Error>;
-    async fn update_job(self, job_info: JobInfo)
+    async fn update_job(self, job: Job)
                         -> Result<Job, Error>;
     async fn delete_job(self, job_id: JobId)
                         -> Result<bool, Error>;
 }
 
 impl JobStoreMethods for Store {
-    async fn create_job(self, new_job: JobInfo)
+    async fn create_job(self, new_job: NewJob)
                             -> Result<Job, Error>
     {
         match sqlx::query("INSERT INTO jobs (name, company_id, location, quantity, \
@@ -158,7 +158,7 @@ impl JobStoreMethods for Store {
         }
     }
 
-    async fn update_job(self, job_info: JobInfo)
+    async fn update_job(self, job: Job)
                             -> Result<Job, Error>
     {
         match sqlx::query(
@@ -167,13 +167,13 @@ impl JobStoreMethods for Store {
                             VALUES ($1, $2, $3, $4, S5, $6, $7)\
                             RETURNING id, name, company_id, location, quantity,\
                                         salary, lever, description, is_delete")
-            .bind(job_info.name)
-            .bind(job_info.company_id.0)
-            .bind(job_info.location)
-            .bind(job_info.quantity)
-            .bind(job_info.salary)
-            .bind(job_info.level)
-            .bind(job_info.description)
+            .bind(job.name)
+            .bind(job.company_id.0)
+            .bind(job.location)
+            .bind(job.quantity)
+            .bind(job.salary)
+            .bind(job.level)
+            .bind(job.description)
             .map(|row: PgRow| Job {
                 id: Some(JobId(row.get("id"))),
                 name:row.get("name"),

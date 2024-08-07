@@ -22,7 +22,7 @@ pub struct Job {
 pub struct JobId(pub i32);
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct JobInfo {
+pub struct NewJob {
     pub name: String,
     pub company_id: CompanyId,
     pub location: String,
@@ -30,12 +30,11 @@ pub struct JobInfo {
     pub salary: i64,
     pub level: String,
     pub description: String,
-    pub is_delete: bool
 }
 pub struct JobMac;
 
 pub trait JobActions {
-    async fn create(store: Store, new_job: JobInfo)
+    async fn create(store: Store, new_job: NewJob)
                     -> Result<Job, Error>;
     async fn get_by_id(store: Store, job_id: JobId)
                        -> Result<Job, Error>;
@@ -43,16 +42,16 @@ pub trait JobActions {
                        -> Result<Job, Error>;
     async fn list(store: Store)
                   -> Result<Vec<Job>, Error>;
-    async fn update(store: Store, job_info: JobInfo)
+    async fn update(store: Store, job: Job)
                     -> Result<Job, Error>;
     async fn delete(store: Store, job_id: JobId)
                     -> Result<bool, Error>;
 }
 
 impl JobActions for JobMac {
-    async fn create(store: Store, job_info: JobInfo) -> Result<Job, Error>
+    async fn create(store: Store, new_job: NewJob) -> Result<Job, Error>
     {
-        match store.create_job(job_info).await {
+        match store.create_job(new_job).await {
             Ok(job) => Ok(job),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
@@ -89,8 +88,8 @@ impl JobActions for JobMac {
             }
         }
     }
-    async fn update(store: Store, job_info: JobInfo) -> Result<Job, Error> {
-        match store.update_job(job_info).await {
+    async fn update(store: Store, job: Job) -> Result<Job, Error> {
+        match store.update_job(job).await {
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
                 Err(e)
