@@ -35,7 +35,7 @@ pub trait CompanyActions {
                  -> Result<Company, Error>;
     async fn get_by_id(store: Store, company_id: CompanyId)
                           -> Result<Company, Error>;
-    async fn list(store: Store)
+    async fn list(store: Store, limit: Option<i32>, offset: i32)
                   -> Result<Vec<Company>, Error>;
     async fn update(store: Store, company: Company)
                     -> Result<Company, Error>;
@@ -80,10 +80,10 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn list(store: Store)
+    async fn list(store: Store, limit: Option<i32>, offset: i32)
                         -> Result<Vec<Company>, Error>
     {
-        match store.get_list_company().await {
+        match store.get_list_company(limit, offset).await {
             Ok(company_list) => Ok(company_list),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);

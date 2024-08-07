@@ -13,7 +13,7 @@ pub trait CompanyStoreMethod {
                                   -> Result<Company, Error>;
     async fn get_company_by_id(self, company_id: CompanyId)
                                -> Result<Company, Error>;
-    async fn get_list_company(self)
+    async fn get_list_company(self, limit: Option<i32>, offset: i32)
                               -> Result<Vec<Company>, Error>;
     async fn update_company(self, company: Company)
                             -> Result<Company, Error>;
@@ -120,10 +120,12 @@ impl CompanyStoreMethod for Store {
         }
     }
 
-    async fn get_list_company(self)
+    async fn get_list_company(self, limit: Option<i32>, offset: i32)
                                   -> Result<Vec<Company>, Error>
     {
-        match sqlx::query("SELECT * FROM COMPANIES")
+        match sqlx::query("SELECT * FROM COMPANIES LIMIT = $1 OFFSET = $2")
+            .bind(limit)
+            .bind(offset)
             .map(|row: PgRow| Company {
                 id: Some(CompanyId(row.get("id"))),
                 email:row.get("email"),

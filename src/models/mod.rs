@@ -9,4 +9,5 @@ pub mod store_impl_company;
 pub mod store_impl_resume;
 pub mod store_impl_role;
 pub mod store_impl_job;
-mod map_resume_job;
+pub mod map_resume_job;
+pub mod pagination;

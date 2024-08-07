@@ -15,21 +15,23 @@ pub fn company_route(base_path: &'static str, store: Store)
     
     let store_filter = warp::any().map(move || store.clone());
 
-    ///
+    ///POST api/v1/company/createCompany
     let create_api = company_path
         .and(warp::path("createCompany"))
+        .and(warp::path::end())
         .and(warp::post())
         .and(store_filter.clone())
         .and(auth(ADMIN_ROLE_ID))
         .and(warp::body::json())
         .and_then(create_company);
 
-    ///GET api/v1/company/listCompany
+    ///GET api/v1/company/listCompany?limit=x&offset=y
     let get_list_company_api = company_path
         .and(warp::get())
         .and(warp::path("listCompany"))
-        .and(warp::path::end())
         .and(store_filter.clone())
+        .and(warp::path::end())
+        .and(warp::query())
         .and_then(get_list_company);
 
     ///GET api/v1/company/getCompany/:id
@@ -37,20 +39,25 @@ pub fn company_route(base_path: &'static str, store: Store)
         .and(warp::get())
         .and(warp::path("getCompany"))
         .and(store_filter.clone())
-        .and(warp::path::param())
+        .and(warp::path::param::<i32>())
+        .and(warp::path::end())
         .and_then(get_company);
 
+    ///PUT api/v1/company/updateCompany
     let update_company_api = company_path
         .and(warp::path("updateCompany"))
+        .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
         .and(auth(ADMIN_ROLE_ID))
         .and(warp::body::json())
         .and_then(update_company);
 
+    ///PUT api/v1/company/deleteCompany
     let delete_company_api = company_path
         .and(warp::path("deleteCompany"))
-        .and(warp::delete())
+        .and(warp::path::end())
+        .and(warp::put())
         .and(store_filter.clone())
         .and(auth(ADMIN_ROLE_ID))
         .and(warp::body::json())

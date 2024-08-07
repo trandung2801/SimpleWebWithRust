@@ -45,15 +45,15 @@ pub trait UserActions {
                  -> Result<User, Error>;
     async fn get_by_id(store: Store, user_id: UserId)
                           -> Result<UserInfo, Error>;
-    async fn list(store: Store)
+    async fn list(store: Store, limit: Option<i32>, offset: i32)
                   -> Result<Vec<UserInfo>, Error>;
     async fn update_user(store: Store, user_update: UserInfo)
                          -> Result<UserInfo, Error>;
     async fn update_password(store: Store, user_update: AuthInfo)
                              -> Result<UserInfo, Error>;
-    async fn set_admin(store: Store, user_info: UserInfo)
+    async fn set_role(store: Store, user_info: UserInfo, role_id: RoleId)
                        -> Result<UserInfo, Error>;
-    async fn delete(store: Store, user_email: String)
+    async fn delete(store: Store, user_id: UserId)
                     -> Result<bool, Error>;
 }
 impl UserActions for UserMac {
@@ -93,10 +93,10 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn list(store: Store)
+    async fn list(store: Store, limit: Option<i32>, offset: i32)
                      -> Result<Vec<UserInfo>, Error>
     {
-        match store.get_list_user().await {
+        match store.get_list_user(limit, offset).await {
             Ok(users) => Ok(users),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
@@ -129,10 +129,10 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn set_admin(store: Store, user_info: UserInfo)
+    async fn set_role(store: Store, user_info: UserInfo, role_id: RoleId)
                                  -> Result<UserInfo, Error>
     {
-        match store.set_admin_role(user_info).await {
+        match store.set_role(user_info, role_id).await {
             Ok(user) => Ok(user),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
@@ -141,10 +141,10 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn delete(store: Store, user_email: String)
+    async fn delete(store: Store, user_id: UserId)
                            -> Result<bool, Error>
     {
-        match store.delete_user_by_email(user_email).await {
+        match store.delete_user_by_id(user_id).await {
             Ok(is_delete) => Ok(is_delete),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
