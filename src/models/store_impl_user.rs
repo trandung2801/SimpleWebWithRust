@@ -16,15 +16,15 @@ pub trait UserStoreMethods {
 
     async fn get_user_by_id(self, user_id: UserId)
                             -> Result<UserInfo, Error>;
-    async fn get_list_user(self)
+    async fn get_list_user(self, limit: Option<i32>, offset: i32)
                            -> Result<Vec<UserInfo>, Error>;
     async fn update_user(self, user_info: UserInfo)
                          -> Result<UserInfo, Error>;
-    async fn delete_user_by_email(self, user_email: String)
+    async fn delete_user_by_id(self, user_id: UserId)
                                   -> Result<bool, Error>;
     async fn update_password(self, user: AuthInfo)
                              -> Result<UserInfo, Error>;
-    async fn set_admin_role(self, user: UserInfo)
+    async fn set_role(self, user: UserInfo, role_id: RoleId)
                             -> Result<UserInfo, Error>;
 }
 
@@ -119,10 +119,12 @@ impl UserStoreMethods for Store {
         }
     }
 
-    async fn get_list_user(self)
+    async fn get_list_user(self, limit: Option<i32>, offset: i32)
                                -> Result<Vec<UserInfo>, Error>
     {
-        match sqlx::query("SELECT * FROM USERS")
+        match sqlx::query("SELECT * FROM USERS LIMIT = $1 OFFSET = $2")
+            .bind(limit)
+            .bind(offset)
             .map(|row: PgRow| UserInfo {
                 id: UserId(row.get("id")),
                 email:row.get("email"),
@@ -196,14 +198,14 @@ impl UserStoreMethods for Store {
         }
     }
 
-    async fn set_admin_role(self, user: UserInfo)
+    async fn set_role(self, user: UserInfo, role_id: RoleId)
                                 -> Result<UserInfo, Error>
     {
         match sqlx::query(
             "Update users SET role_id = $1 \
                 where email = $2 \
                 RETURNING id, email, company_id, role_id, is_delete")
-            .bind(user.role_id.0)
+            .bind(role_id.0)
             .bind(user.email)
             .map(|row: PgRow| UserInfo {
                 id: UserId(row.get("id")),
@@ -223,12 +225,12 @@ impl UserStoreMethods for Store {
         }
     }
 
-    async fn delete_user_by_email(self, user_email: String)
+    async fn delete_user_by_id(self, user_id: UserId)
                                   -> Result<bool, Error>
     {
-        match sqlx::query("Update users set is_delete = $1 where email = $2")
+        match sqlx::query("Update users set is_delete = $1 where id = $2")
             .bind(true)
-            .bind(user_email)
+            .bind(user_id.0)
             .execute(&self.connection)
             .await
         {

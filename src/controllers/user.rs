@@ -9,6 +9,8 @@ use handle_errors::Error;
 use warp::http::StatusCode;
 use crate::middleware::convert_to_json::{PayloadNoData, PayloadWithData, Data, PayloadForLogin};
 use crate::middleware::jwt::{Jwt, Claims, JwtActions};
+use crate::models::pagination::{Pagination, PaginationMethods};
+use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, RoleId};
 use crate::models::user::{UserInfo, User, UserMac, AuthInfo, UserActions, UserId};
 use crate::models::store::Store;
 
@@ -117,14 +119,10 @@ pub async fn login(store: Store, login_info: AuthInfo)
     }
 }
 
-pub async fn get_user_by_id(store: Store, claims: Claims, user_id: i32)
+pub async fn get_user_by_id(store: Store, user_id: i32)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     event!(target: "backend", Level::INFO, "querying user");
-    //valid user
-    if claims.id.0 != user_id {
-        return Err(warp::reject())
-    }
     match UserMac::get_by_id(store, UserId(user_id)).await {
         Ok(user) =>
             {
@@ -150,10 +148,16 @@ pub async fn get_user_by_id(store: Store, claims: Claims, user_id: i32)
     }
 }
 
-pub async fn get_list_users(store: Store)
+pub async fn get_list_users(store: Store, params: HashMap<String, String>)
     -> Result<impl warp::Reply, warp::Rejection>
 {
-    match UserMac::list(store).await {
+    let mut pagination = Pagination::default();
+
+    if !params.is_empty() {
+        event!(Level::INFO, pagination = true);
+        pagination = PaginationMethods::extract_pagination(params)?;
+    }
+    match UserMac::list(store, pagination.limit, pagination.offset).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -232,10 +236,29 @@ pub async fn update_password(store: Store, claims: Claims, user_update: AuthInfo
 pub async fn set_admin_role(store: Store, claims: Claims, user: UserInfo)
                                         -> Result<impl warp::Reply, warp::Rejection>
 {
-    if claims.id != user.id {
-        return Err(warp::reject())
-    };
-    match UserMac::set_admin(store, user).await {
+    match UserMac::set_role(store, user, RoleId(ADMIN_ROLE_ID)).await {
+        Ok(res) =>
+            {
+                let payload = PayloadWithData {
+                    status_code: StatusCode::OK,
+                    message: "Update user success".to_string(),
+                    data: Data::UserInfo(res)
+                };
+                // let payload = json!({
+                //     "statusCode": 201,
+                //     "message": "update admin role success",
+                //     "data": res
+                // });
+                Ok(warp::reply::json(&payload))
+            }
+        Err(e) => Err(warp::reject::custom(e)),
+    }
+}
+
+pub async fn set_hr_role(store: Store, claims: Claims, user: UserInfo)
+                            -> Result<impl warp::Reply, warp::Rejection>
+{
+    match UserMac::set_role(store, user, RoleId(HR_ROLE_ID)).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -260,7 +283,7 @@ pub async fn delete(store: Store, claims: Claims, user_delete: UserInfo)
     if claims.id != user_delete.id {
         return Err(warp::reject())
     };
-    match UserMac::delete(store, user_delete.email).await {
+    match UserMac::delete(store, user_delete.id).await {
         Ok(_) =>
             {
                 let payload = PayloadNoData {

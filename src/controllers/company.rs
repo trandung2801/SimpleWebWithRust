@@ -10,6 +10,7 @@ use warp::http::StatusCode;
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::middleware::jwt::{Jwt, Claims};
 use crate::models::company::{CompanyInfo, CompanyMac, CompanyActions, Company, CompanyId};
+use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::role::ADMIN_ROLE_ID;
 use crate::models::store::Store;
 use crate::models::user::{UserMac, UserActions};
@@ -19,14 +20,6 @@ use crate::models::user::{UserMac, UserActions};
 pub async fn create_company(store: Store, claims: Claims, company_info: CompanyInfo)
                             -> Result<impl warp::Reply, warp::Rejection>
 {
-    //Authorization
-    if(claims.role.0 != ADMIN_ROLE_ID) {
-        let payload = PayloadNoData {
-            status_code: StatusCode::UNAUTHORIZED,
-            message: "Unauthorized".to_string(),
-        };
-        return Ok(warp::reply::json(&payload))
-    }
     //valid company
     let new_email = company_info.email;
     match CompanyMac::get_by_email(store.clone(), &new_email).await {
@@ -95,10 +88,16 @@ pub async fn get_company(store: Store, company_id: i32)
     }
 }
 
-pub async fn get_list_company(store: Store)
+pub async fn get_list_company(store: Store, params: HashMap<String, String>)
                                        -> Result<impl warp::Reply, warp::Rejection>
 {
-    match CompanyMac::list(store).await {
+    let mut pagination = Pagination::default();
+
+    if !params.is_empty() {
+        event!(Level::INFO, pagination = true);
+        pagination = PaginationMethods::extract_pagination(params)?;
+    }
+    match CompanyMac::list(store, pagination.limit, pagination.offset).await {
         Ok(res) =>
             {
                 // let status_code = StatusCode::OK;
@@ -122,14 +121,6 @@ pub async fn get_list_company(store: Store)
 pub async fn update_company(store: Store, claims: Claims, company: Company)
                                     -> Result<impl warp::Reply, warp::Rejection>
 {
-    //Authorization
-    if(claims.role.0 != ADMIN_ROLE_ID) {
-        let payload = PayloadNoData {
-            status_code: StatusCode::UNAUTHORIZED,
-            message: "Unauthorized".to_string(),
-        };
-        return Ok(warp::reply::json(&payload))
-    }
     let email_update = company.email.clone();
     match CompanyMac::get_by_email(store.clone(), &email_update).await {
         Ok(res) => {
@@ -169,14 +160,6 @@ pub async fn update_company(store: Store, claims: Claims, company: Company)
 pub async fn delete_company(store: Store, claims: Claims, company: Company)
                                -> Result<impl warp::Reply, warp::Rejection>
 {
-    //Authorization
-    if(claims.role.0 != ADMIN_ROLE_ID) {
-        let payload = PayloadNoData {
-            status_code: StatusCode::UNAUTHORIZED,
-            message: "Unauthorized".to_string(),
-        };
-        return Ok(warp::reply::json(&payload))
-    }
     match CompanyMac::delete(store, company.id.unwrap()).await {
         Ok(_) =>
             {
