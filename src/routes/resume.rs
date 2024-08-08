@@ -1,7 +1,7 @@
 use warp::Filter;
-use crate::controllers::resume::{create_resume, delete_resume, get_list_resume_by_user_id, get_resume, update_resume};
+use crate::controllers::resume::{create_resume, delete_resume, get_list_resume_by_job, get_list_resume_by_user_id, get_resume, update_resume};
 use crate::middleware::authen::auth;
-use crate::models::role::{ADMIN_ROLE_ID, USER_ROLE_ID};
+use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, USER_ROLE_ID};
 use crate::models::store::Store;
 
 pub fn resume_route(base_path: &'static str, store: Store)
@@ -43,15 +43,14 @@ pub fn resume_route(base_path: &'static str, store: Store)
         .and(warp::query())
         .and_then(get_list_resume_by_user_id);
 
-    // ///GET api/v1/resume/listResume?limit=x&offset=y
-    // let get_list_resume_job_api = resume_path
-    //     .and(warp::get())
-    //     .and(warp::path("listResume"))
-    //     .and(warp::path::end())
-    //     .and(store_filter.clone())
-    //     .and(auth(USER_ROLE_ID))
-    //     .and(warp::query())
-    //     .and_then(get_list_resume_by_job);
+    ///GET api/v1/resume/listResume?limit=x&offset=y
+    let get_list_resume_job_api = resume_path
+        .and(warp::get())
+        .and(warp::path("listResume"))
+        .and(warp::path::end())
+        .and(store_filter.clone())
+        .and(warp::query())
+        .and_then(get_list_resume_by_job);
 
     ///PUT api/v1/resume/updateResume
     let update_resume_api = resume_path
@@ -76,4 +75,9 @@ pub fn resume_route(base_path: &'static str, store: Store)
 
 
     create_api
+        .or(get_resume_api)
+        .or(get_list_resume_user_api)
+        .or(get_list_resume_job_api)
+        .or(update_resume_api)
+        .or(delete_resume_api)
 }

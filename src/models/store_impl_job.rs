@@ -13,9 +13,7 @@ pub trait JobStoreMethods {
                         -> Result<Job, Error>;
     async fn get_job_by_id(self, job_id: JobId)
                            -> Result<Job, Error>;
-    async fn get_job_by_company_id(self, company_id: CompanyId)
-                                   -> Result<Job, Error>;
-    async fn get_list_job(self)
+    async fn get_list_job(self, limit: Option<i32>, offset: i32)
                           -> Result<Vec<Job>, Error>;
     async fn update_job(self, job: Job)
                         -> Result<Job, Error>;
@@ -27,27 +25,27 @@ impl JobStoreMethods for Store {
     async fn create_job(self, new_job: NewJob)
                             -> Result<Job, Error>
     {
-        match sqlx::query("INSERT INTO jobs (name, company_id, location, quantity, \
-                                                salary, lever, description, is_delete) \
-                            VALUES ($1, $2, $3, $4, S5, $6, $7, $8)\
-                            RETURNING id, name, company_id, location, quantity,\
-                                        salary, lever, description, is_delete")
-            .bind(new_job.name)
+        match sqlx::query("INSERT INTO jobs (job_name, company_id, location, quantity, \
+                                                salary, job_level, description, is_delete) \
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\
+                            RETURNING id, job_name, company_id, location, quantity,\
+                                        salary, job_level, description, is_delete")
+            .bind(new_job.job_name)
             .bind(new_job.company_id.0)
             .bind(new_job.location)
             .bind(new_job.quantity)
             .bind(new_job.salary)
-            .bind(new_job.level)
+            .bind(new_job.job_level)
             .bind(new_job.description)
             .bind(false)
             .map(|row: PgRow| Job {
                 id: Some(JobId(row.get("id"))),
-                name:row.get("name"),
+                job_name:row.get("job_name"),
                 company_id: CompanyId(row.get("company_id")),
                 location: row.get("location"),
                 quantity: row.get("quantity"),
                 salary: row.get("salary"),
-                level: row.get("level"),
+                job_level: row.get("job_level"),
                 description: row.get("description"),
                 is_delete: row.get("is_delete")
             })
@@ -81,16 +79,16 @@ impl JobStoreMethods for Store {
     async fn get_job_by_id(self, job_id: JobId)
                                -> Result<Job, Error>
     {
-        match sqlx::query("SELECT * FROM RESUMES WHERE id = $1")
+        match sqlx::query("SELECT * FROM JOBS WHERE id = $1")
             .bind(job_id.0)
             .map(|row: PgRow| Job {
                 id: Some(JobId(row.get("id"))),
-                name:row.get("name"),
+                job_name:row.get("job_name"),
                 company_id: CompanyId(row.get("company_id")),
                 location: row.get("location"),
                 quantity: row.get("quantity"),
                 salary: row.get("salary"),
-                level: row.get("level"),
+                job_level: row.get("job_level"),
                 description: row.get("description"),
                 is_delete: row.get("is_delete")
             })
@@ -105,45 +103,21 @@ impl JobStoreMethods for Store {
         }
     }
 
-    async fn get_job_by_company_id(self, company_id: CompanyId)
-                                       -> Result<Job, Error>
-    {
-        match sqlx::query("SELECT * FROM RESUMES WHERE company_id = $1")
-            .bind(company_id.0)
-            .map(|row: PgRow| Job {
-                id: Some(JobId(row.get("id"))),
-                name:row.get("name"),
-                company_id: CompanyId(row.get("company_id")),
-                location: row.get("location"),
-                quantity: row.get("quantity"),
-                salary: row.get("salary"),
-                level: row.get("level"),
-                description: row.get("description"),
-                is_delete: row.get("is_delete")
-            })
-            .fetch_one(&self.connection)
-            .await
-        {
-            Ok(job) => Ok(job),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError(e))
-            }
-        }
-    }
 
-    async fn get_list_job(self)
+    async fn get_list_job(self, limit: Option<i32>, offset: i32)
                               -> Result<Vec<Job>, Error>
     {
-        match sqlx::query("SELECT * FROM RESUMES")
+        match sqlx::query("SELECT * FROM JOBS LIMIT $1 OFFSET $2")
+            .bind(limit)
+            .bind(offset)
             .map(|row: PgRow| Job {
                 id: Some(JobId(row.get("id"))),
-                name:row.get("name"),
+                job_name:row.get("job_name"),
                 company_id: CompanyId(row.get("company_id")),
                 location: row.get("location"),
                 quantity: row.get("quantity"),
                 salary: row.get("salary"),
-                level: row.get("level"),
+                job_level: row.get("job_level"),
                 description: row.get("description"),
                 is_delete: row.get("is_delete")
             })
@@ -162,26 +136,27 @@ impl JobStoreMethods for Store {
                             -> Result<Job, Error>
     {
         match sqlx::query(
-            "Update jobs SET (name, company_id, location, quantity, \
-                                                salary, lever, description) \
-                            VALUES ($1, $2, $3, $4, S5, $6, $7)\
-                            RETURNING id, name, company_id, location, quantity,\
-                                        salary, lever, description, is_delete")
-            .bind(job.name)
+            "Update jobs \
+                            SET job_name = $1, company_id = $2, location = $3, \
+                            quantity = $4, salary = $5, job_level= $6, \
+                            description = $7 \
+                            RETURNING id, job_name, company_id, location, quantity,\
+                                        salary, job_level, description, is_delete")
+            .bind(job.job_name)
             .bind(job.company_id.0)
             .bind(job.location)
             .bind(job.quantity)
             .bind(job.salary)
-            .bind(job.level)
+            .bind(job.job_level)
             .bind(job.description)
             .map(|row: PgRow| Job {
                 id: Some(JobId(row.get("id"))),
-                name:row.get("name"),
+                job_name:row.get("job_name"),
                 company_id: CompanyId(row.get("company_id")),
                 location: row.get("location"),
                 quantity: row.get("quantity"),
                 salary: row.get("salary"),
-                level: row.get("level"),
+                job_level: row.get("job_level"),
                 description: row.get("description"),
                 is_delete: row.get("is_delete")
             })

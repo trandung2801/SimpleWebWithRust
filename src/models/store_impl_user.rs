@@ -1,5 +1,5 @@
 use crate::models::company::CompanyId;
-use crate::models::role::RoleId;
+use crate::models::role::{RoleId, USER_ROLE_ID};
 use crate::models::store::Store;
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
 
@@ -32,11 +32,13 @@ impl UserStoreMethods for Store {
     async fn create_user(self, new_user: AuthInfo)
                              -> Result<UserInfo, Error>
     {
-        match sqlx::query("INSERT INTO users (email, password, is_delete) \
-                            VALUES ($1, $2, $3)\
+        match sqlx::query("INSERT INTO users (email, password, company_id, role_id, is_delete) \
+                            VALUES ($1, $2, $3, $4, $5)\
                             RETURNING id, email, company_id, role_id, is_delete")
             .bind(new_user.email)
             .bind(new_user.password)
+            .bind(0)
+            .bind(USER_ROLE_ID)
             .bind(false)
             .map(|row: PgRow| UserInfo {
                 id: UserId(row.get("id")),
@@ -122,7 +124,7 @@ impl UserStoreMethods for Store {
     async fn get_list_user(self, limit: Option<i32>, offset: i32)
                                -> Result<Vec<UserInfo>, Error>
     {
-        match sqlx::query("SELECT * FROM USERS LIMIT = $1 OFFSET = $2")
+        match sqlx::query("SELECT * FROM USERS LIMIT $1 OFFSET $2")
             .bind(limit)
             .bind(offset)
             .map(|row: PgRow| UserInfo {
@@ -147,8 +149,7 @@ impl UserStoreMethods for Store {
                              -> Result<UserInfo, Error>
     {
         match sqlx::query(
-            "Update users SET (company_id) \
-                values($1) \
+            "Update users SET company_id = $1 \
                 where email = $2 \
                 RETURNING id, email, company_id, role_id, is_delete")
             .bind(user_info.company_id.0)

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS companies (
     email TEXT NOT NULL,
     address TEXT,
     description TEXT,
+    is_delete BOOLEAN NOT NULL ,
 
     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_on TIMESTAMP NOT NULL DEFAULT NOW()

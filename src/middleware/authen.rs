@@ -14,15 +14,12 @@ const BEARER: &str = "Bearer";
 pub fn auth(role: i32)
     -> impl Filter<Extract = (Claims,), Error = warp::Rejection> + Clone
 {
-    // headers_cloned()
-    //     .map(move |headers: HeaderMap<HeaderValue>| (role.clone(), headers))
-    //     .and_then(authorize)
     headers_cloned()
-        .map(move |headers: HeaderMap<HeaderValue>| authorize(role.clone(), headers))
+        .map(move |headers: HeaderMap<HeaderValue>| (role.clone(), headers))
+        .and_then(authorize)
 }
 
-// async fn authorize ((role, headers): (i32, HeaderMap<HeaderValue>))
-async fn authorize (role: i32, headers: HeaderMap<HeaderValue>)
+async fn authorize ((role, headers): (i32, HeaderMap<HeaderValue>))
     -> Result<Claims, warp::Rejection>
 {
     match jwt_from_header(&headers) {

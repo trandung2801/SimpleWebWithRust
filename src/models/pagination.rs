@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
 use handle_errors::Error;
+use crate::models::job::JobId;
+use crate::models::resume::ResumeId;
 
 /// Pagination struct which is getting extract
 /// from query params
@@ -10,6 +12,24 @@ pub struct Pagination {
     pub limit: Option<i32>,
     /// The index of the first item which has to be returned
     pub offset: i32,
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct PaginationForJob {
+    /// The index of the last item which has to be returned
+    pub limit: Option<i32>,
+    /// The index of the first item which has to be returned
+    pub offset: i32,
+    pub job_id: i32,
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct PaginationForResume {
+    /// The index of the last item which has to be returned
+    pub limit: Option<i32>,
+    /// The index of the first item which has to be returned
+    pub offset: i32,
+    pub resume_id: i32,
 }
 
 /// Extract query parameters from the `/questions` route
@@ -32,6 +52,8 @@ pub struct Pagination {
 ///
 pub trait PaginationMethods {
     fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error>;
+    fn extract_pagination_job(params: HashMap<String, String>) -> Result<PaginationForJob, Error>;
+    fn extract_pagination_resume(params: HashMap<String, String>) -> Result<PaginationForResume, Error>;
 }
 
 impl PaginationMethods for  Pagination {
@@ -51,6 +73,66 @@ impl PaginationMethods for  Pagination {
                 // Takes the "offset" parameter in the query and tries to convert it to a number
                 offset: params
                     .get("offset")
+                    .unwrap()
+                    .parse()
+                    .map_err(Error::ParseError)?,
+            });
+        }
+
+        Err(Error::MissingParameters)
+    }
+
+    fn extract_pagination_job(params: HashMap<String, String>) -> Result<PaginationForJob, Error>
+    {
+        // Could be improved in the future
+        if params.contains_key("limit") && params.contains_key("offset") && params.contains_key("jobId") {
+            return Ok(PaginationForJob {
+                // Takes the "limit" parameter in the query and tries to convert it to a number
+                limit: Some(
+                    params
+                        .get("limit")
+                        .unwrap()
+                        .parse()
+                        .map_err(Error::ParseError)?,
+                ),
+                // Takes the "offset" parameter in the query and tries to convert it to a number
+                offset: params
+                    .get("offset")
+                    .unwrap()
+                    .parse()
+                    .map_err(Error::ParseError)?,
+                job_id: params
+                    .get("jobId")
+                    .unwrap()
+                    .parse()
+                    .map_err(Error::ParseError)?,
+            });
+        }
+
+        Err(Error::MissingParameters)
+    }
+
+    fn extract_pagination_resume(params: HashMap<String, String>) -> Result<PaginationForResume, Error>
+    {
+        // Could be improved in the future
+        if params.contains_key("limit") && params.contains_key("offset") && params.contains_key("resumeId") {
+            return Ok(PaginationForResume {
+                // Takes the "limit" parameter in the query and tries to convert it to a number
+                limit: Some(
+                    params
+                        .get("limit")
+                        .unwrap()
+                        .parse()
+                        .map_err(Error::ParseError)?,
+                ),
+                // Takes the "offset" parameter in the query and tries to convert it to a number
+                offset: params
+                    .get("offset")
+                    .unwrap()
+                    .parse()
+                    .map_err(Error::ParseError)?,
+                resume_id: params
+                    .get("resumeId")
                     .unwrap()
                     .parse()
                     .map_err(Error::ParseError)?,

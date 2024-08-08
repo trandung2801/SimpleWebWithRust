@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS roles (
     id serial PRIMARY KEY,
     role Text NOT NULL,
+    is_delete BOOLEAN NOT NULL ,
 
     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_on TIMESTAMP NOT NULL DEFAULT NOW()

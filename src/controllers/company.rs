@@ -28,7 +28,7 @@ pub async fn create_company(store: Store, claims: Claims, new_company: NewCompan
             //     "message": "Email invalid",
             // });
             let payload = PayloadNoData {
-                status_code: StatusCode::BAD_REQUEST,
+                // status_code: StatusCode::BAD_REQUEST,
                 message: "Email company invalid".to_string(),
             };
             return Ok(warp::reply::json(&payload))
@@ -51,7 +51,7 @@ pub async fn create_company(store: Store, claims: Claims, new_company: NewCompan
                 //     "data": res
                 // });
                 let payload = PayloadWithData {
-                    status_code: StatusCode::CREATED,
+                    // status_code: StatusCode::CREATED,
                     message: "Create Company Success".to_string(),
                     data: Data::Company(res)
                 };
@@ -75,7 +75,7 @@ pub async fn get_company(store: Store, company_id: i32)
                 //      "data": res,
                 // });
                 let payload = PayloadWithData {
-                    status_code: StatusCode::OK,
+                    // status_code: StatusCode::OK,
                     message: "Get Company Success".to_string(),
                     data: Data::Company(res)
                 };
@@ -92,7 +92,7 @@ pub async fn get_list_company(store: Store, params: HashMap<String, String>)
 
     if !params.is_empty() {
         event!(Level::INFO, pagination = true);
-        pagination = PaginationMethods::extract_pagination(params)?;
+        pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
     match CompanyMac::list(store, pagination.limit, pagination.offset).await {
         Ok(res) =>
@@ -104,7 +104,7 @@ pub async fn get_list_company(store: Store, params: HashMap<String, String>)
                 //     "data": res
                 // });
                 let payload = PayloadWithData {
-                    status_code: StatusCode::OK,
+                    // status_code: StatusCode::OK,
                     message: "Get List Company Success".to_string(),
                     data: Data::ListCompany(res)
                 };
@@ -127,7 +127,7 @@ pub async fn update_company(store: Store, claims: Claims, company: Company)
             //     "message": "Email invalid",
             // });
             let payload = PayloadNoData {
-                status_code: StatusCode::BAD_REQUEST,
+                // status_code: StatusCode::BAD_REQUEST,
                 message: "Email company invalid".to_string(),
             };
             return Ok(warp::reply::json(&payload))
@@ -144,7 +144,7 @@ pub async fn update_company(store: Store, claims: Claims, company: Company)
                 //     "data": res
                 // });
                 let payload = PayloadWithData {
-                    status_code: StatusCode::OK,
+                    // status_code: StatusCode::OK,
                     message: "Update Company Success".to_string(),
                     data: Data::Company(res)
                 };
@@ -166,7 +166,7 @@ pub async fn delete_company(store: Store, claims: Claims, company: Company)
                 //     "message": "Delete Company success",
                 // });
                 let payload = PayloadNoData {
-                    status_code: StatusCode::OK,
+                    // status_code: StatusCode::OK,
                     message: "Delete Company success".to_string()
                 };
                 Ok(warp::reply::json(&payload))

@@ -24,8 +24,7 @@ pub struct MapResumeJobId(pub i32);
 pub struct MapResumeJobMac;
 pub trait MapResumeJobActions{
     async fn create(store: Store, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>;
-    async fn list_job_by_resume(store: Store, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>;
-    async fn list_resume_by_job(store: Store, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>;
+    async fn list_resume_by_job(store: Store, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>;
 }
 
 impl MapResumeJobActions for MapResumeJobMac {
@@ -40,20 +39,9 @@ impl MapResumeJobActions for MapResumeJobMac {
             }
         }
     }
-    async fn list_job_by_resume(store: Store, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>
+    async fn list_resume_by_job(store: Store, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>
     {
-        match store.get_list_job_by_resume(resume_id).await
-        {
-            Ok(list_map) => Ok(list_map),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(e)
-            }
-        }
-    }
-    async fn list_resume_by_job(store: Store, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>
-    {
-        match store.get_list_resume_by_job(job_id).await
+        match store.get_list_resume_by_job_id(limit, offset, job_id).await
         {
             Ok(list_map) => Ok(list_map),
             Err(e) => {
