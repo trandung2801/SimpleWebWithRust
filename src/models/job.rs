@@ -8,12 +8,12 @@ use crate::models::store_impl_job::JobStoreMethods;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Job {
     pub id: Option<JobId>,
-    pub name: String,
+    pub job_name: String,
     pub company_id: CompanyId,
     pub location: String,
     pub quantity: i32,
-    pub salary: i64,
-    pub level: String,
+    pub salary: i32,
+    pub job_level: String,
     pub description: String,
     pub is_delete: bool
 }
@@ -23,12 +23,12 @@ pub struct JobId(pub i32);
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NewJob {
-    pub name: String,
+    pub job_name: String,
     pub company_id: CompanyId,
     pub location: String,
     pub quantity: i32,
-    pub salary: i64,
-    pub level: String,
+    pub salary: i32,
+    pub job_level: String,
     pub description: String,
 }
 pub struct JobMac;
@@ -38,9 +38,7 @@ pub trait JobActions {
                     -> Result<Job, Error>;
     async fn get_by_id(store: Store, job_id: JobId)
                        -> Result<Job, Error>;
-    async fn get_by_company_id(store: Store, company_id: CompanyId)
-                       -> Result<Job, Error>;
-    async fn list(store: Store)
+    async fn list(store: Store, limit: Option<i32>, offset: i32)
                   -> Result<Vec<Job>, Error>;
     async fn update(store: Store, job: Job)
                     -> Result<Job, Error>;
@@ -69,18 +67,9 @@ impl JobActions for JobMac {
             }
         }
     }
-    async fn get_by_company_id(store: Store, company_id: CompanyId) -> Result<Job, Error> {
-        match store.get_job_by_company_id(company_id).await {
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(e)
-            }
-            Ok(job) => Ok(job),
-        }
-    }
-    async fn list(store: Store) -> Result<Vec<Job>, Error>
+    async fn list(store: Store, limit: Option<i32>, offset: i32) -> Result<Vec<Job>, Error>
     {
-        match store.get_list_job().await {
+        match store.get_list_job(limit, offset).await {
             Ok(job_list) => Ok(job_list),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
@@ -107,3 +96,8 @@ impl JobActions for JobMac {
         }
     }
 }
+
+// TEST
+#[cfg(test)]
+#[path = "../_tests/model_job.rs"]
+mod tests;

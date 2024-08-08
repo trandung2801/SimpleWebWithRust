@@ -116,10 +116,11 @@ impl ResumeStoreMethods for Store {
     async fn get_list_resume_by_user_id(self, limit: Option<i32>, offset: i32, user_id: UserId)
                                   -> Result<Vec<Resume>, Error>
     {
-        match sqlx::query("SELECT * FROM RESUMES LIMIT = $1 OFFSET = $2 WHERE user_id = $3")
+        match sqlx::query("SELECT * FROM RESUMES WHERE user_id = $1 \
+                                LIMIT $2 OFFSET $3 ")
+            .bind(user_id.0)
             .bind(limit)
             .bind(offset)
-            .bind(user_id.0)
             .map(|row: PgRow| Resume {
                 id: Some(ResumeId(row.get("id"))),
                 user_id:UserId(row.get("user_id")),
@@ -142,9 +143,8 @@ impl ResumeStoreMethods for Store {
                                -> Result<Resume, Error>
     {
         match sqlx::query(
-            "Update resumes SET (user_id, email, url) \
-                            VALUES ($1, $2, $3)\
-                            WHERE id = $4\
+            "Update resumes SET user_id = $1, email = $2, url = $3 \
+                            WHERE id = $4 \
                             RETURNING id, user_id, email, url, is_delete")
             .bind(resume.user_id.0)
             .bind(resume.email)

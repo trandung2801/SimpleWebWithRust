@@ -123,7 +123,7 @@ impl CompanyStoreMethod for Store {
     async fn get_list_company(self, limit: Option<i32>, offset: i32)
                                   -> Result<Vec<Company>, Error>
     {
-        match sqlx::query("SELECT * FROM COMPANIES LIMIT = $1 OFFSET = $2")
+        match sqlx::query("SELECT * FROM COMPANIES LIMIT $1 OFFSET $2")
             .bind(limit)
             .bind(offset)
             .map(|row: PgRow| Company {
@@ -150,9 +150,9 @@ impl CompanyStoreMethod for Store {
                                 -> Result<Company, Error>
     {
         match sqlx::query(
-            "Update companies SET (email, name, address, description ) \
-                            VALUES ($1, $2, $3, $4)\
-                            WHERE id = $5
+            "Update companies \
+                            SET email = $1, name = $2, address = $3, description = $4 \
+                            WHERE id = $5 \
                             RETURNING id, email, name, address, description, is_delete")
             .bind(company.email)
             .bind(company.name)

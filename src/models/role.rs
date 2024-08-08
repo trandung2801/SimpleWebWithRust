@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use handle_errors::Error;
-use crate::models::resume::{Resume, ResumeInfo};
+use crate::models::resume::{Resume};
 use crate::models::store::Store;
 use crate::models::store_impl_role::RoleStoreMethods;
-use crate::models::user::{CompanyId, UserId};
+use crate::models::user::{UserId};
 
 
 pub const ADMIN_ROLE_ID: i32 = 1;

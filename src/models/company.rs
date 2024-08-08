@@ -115,3 +115,8 @@ impl CompanyActions for CompanyMac {
         }
     }
 }
+
+// TEST
+#[cfg(test)]
+#[path = "../_tests/model_company.rs"]
+mod tests;

@@ -6,7 +6,7 @@ use tracing::log::SetLoggerError;
 use handle_errors::Error;
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
 use crate::models::company::{Company, CompanyId};
-use crate::models::job::{Job, JobId, JobInfo};
+use crate::models::job::{Job, JobId};
 use crate::models::map_resume_job::{NewMapResumeJob, MapResumeJob, MapResumeJobId};
 use crate::models::resume::{Resume, ResumeId};
 use crate::models::role::{Role, RoleId, RoleInfo};
@@ -48,7 +48,7 @@ impl MapResumeJobMethods for Store {
                             VALUES ($1, $2)\
                             RETURNING id, resume_id, job_id")
             .bind(new_map_resume_job.resume_id.0)
-            .bind(new_map_resume_job.resume_id.0)
+            .bind(new_map_resume_job.job_id.0)
             .map(|row: PgRow| MapResumeJob {
                 id: Some(MapResumeJobId(row.get("id"))),
                 resume_id: ResumeId(row.get("resume_id")),
@@ -102,10 +102,10 @@ impl MapResumeJobMethods for Store {
     async fn get_list_resume_by_job_id(self, limit: Option<i32>, offset: i32, job_id: JobId)
         -> Result<Vec<MapResumeJob>, Error>
     {
-        match sqlx::query("SELECT * FROM map_resume_job LIMIT = $1 OFFSET = $2 where job_id = $3")
+        match sqlx::query("SELECT * FROM map_resume_job where job_id = $1 LIMIT $2 OFFSET $3 ")
+            .bind(job_id.0)
             .bind(limit)
             .bind(offset)
-            .bind(job_id.0)
             .map(|row: PgRow| MapResumeJob {
                 id: Some(MapResumeJobId(row.get("id"))),
                 resume_id: ResumeId(row.get("resume_id")),
@@ -122,3 +122,8 @@ impl MapResumeJobMethods for Store {
         }
     }
 }
+
+// TEST
+#[cfg(test)]
+#[path = "../_tests/model_store.rs"]
+mod tests;

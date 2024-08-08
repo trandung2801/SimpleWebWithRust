@@ -3,8 +3,10 @@ use warp::{http::Method, Filter};
 use warp::multipart::Part;
 use handle_errors::return_error;
 use routes::user::user_route;
-use crate::models::store::StoreActionBasic;
+use crate::models::store::{Store, StoreActionBasic};
 use crate::routes::company::company_route;
+use crate::routes::job::job_route;
+use crate::routes::resume::resume_route;
 
 mod models;
 mod routes;
@@ -29,7 +31,7 @@ async fn main() {
         configEnv.db_port,
         configEnv.db_name
     );
-    let store = StoreActionBasic::new(&db_url).await;
+    let store: Store = <Store as StoreActionBasic>::new(&db_url).await;
     // let store = Arc::new(store);
 
 
@@ -54,9 +56,11 @@ async fn main() {
     let user_routes = user_route("api", store.clone());
     let company_routes = company_route("api", store.clone());
     let resume_routes = resume_route("api", store.clone());
+    let job_routes = job_route("api", store.clone());
     let routes = user_routes
         .or(company_routes)
         .or(resume_routes)
+        .or(job_routes)
         .with(cors)
         .with(warp::trace::request())
         .recover(return_error);

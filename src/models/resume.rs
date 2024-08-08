@@ -137,3 +137,7 @@ impl ResumeActions for ResumeMac {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "../_tests/model_resume.rs"]
+mod tests;
