@@ -133,6 +133,7 @@ dependencies = [
  "clap",
  "config",
  "dotenv",
+ "futures-util",
  "handle-errors",
  "jsonwebtoken",
  "paseto",
@@ -145,6 +146,7 @@ dependencies = [
  "rust-argon2",
  "serde",
  "serde_json",
+ "serde_yaml",
  "sqlx",
  "tokio",
  "tracing",
@@ -806,6 +808,7 @@ dependencies = [
  "reqwest",
  "reqwest-middleware",
  "rust-argon2",
+ "serde_yaml",
  "sqlx",
  "tracing",
  "warp",
@@ -2057,6 +2060,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_yaml"
+version = "0.9.34+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
+dependencies = [
+ "indexmap 2.2.6",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
+]
+
+[[package]]
 name = "sha-1"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2766,6 +2782,12 @@ dependencies = [
  "generic-array",
  "subtle",
 ]
+
+[[package]]
+name = "unsafe-libyaml"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "untrusted"

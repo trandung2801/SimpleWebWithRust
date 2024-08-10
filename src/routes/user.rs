@@ -10,10 +10,9 @@ pub fn user_route(base_path: &'static str, store: Store)
     let user_path = warp::path(base_path)
                                                             .and(warp::path("v1"));
 
-    // let db_filter = warp::any().map(move || db.clone());
     let store_filter = warp::any().map(move || store.clone());
 
-    ///POST api/v1/register
+    //POST api/v1/register
     let register_api = user_path
         .and(warp::path("register"))
         .and(warp::path::end())
@@ -22,7 +21,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(register);
 
-    ///GET api/v1/login
+    //GET api/v1/login
     let login_api = user_path
         .and(warp::path("login"))
         .and(warp::path::end())
@@ -31,17 +30,17 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(login);
 
-    ///GET api/v1/user/getUser/:id
+    //GET api/v1/user/getUser/:id
     let get_user_api = user_path
         .and(warp::get())
         .and(warp::path("user"))
         .and(warp::path("getUser"))
-        .and(warp::path::end())
         .and(store_filter.clone())
         .and(warp::path::param::<i32>())
+        .and(warp::path::end())
         .and_then(get_user_by_id);
 
-    ///GET api/v1/user/listUser?limit=x&offset=y
+    //GET api/v1/user/listUser?limit=x&offset=y
     let get_list_user_api = user_path
         .and(warp::get())
         .and(warp::path("user"))
@@ -51,7 +50,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::query())
         .and_then(get_list_users);
 
-    ///PUT api/v1/user/updateUser
+    //PUT api/v1/user/updateUser
     let update_user_api = user_path
         .and(warp::path("user"))
         .and(warp::path("updateUser"))
@@ -62,7 +61,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_user);
 
-    ///PUT api/v1/user/updateUser
+    //PUT api/v1/user/updateUser
     let update_hr_api = user_path
         .and(warp::path("user"))
         .and(warp::path("updateUser"))
@@ -73,7 +72,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_user);
 
-    ///PUT api/v1/admin/updateAdmin
+    //PUT api/v1/admin/updateAdmin
     let update_admin_api = user_path
         .and(warp::path("admin"))
         .and(warp::path("updateAdmin"))
@@ -84,7 +83,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_user);
 
-    ///PUT api/v1/user/updatePassword
+    //PUT api/v1/user/updatePassword
     let update_user_password_api = user_path
         .and(warp::path("user"))
         .and(warp::path("updatePassword"))
@@ -95,7 +94,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_password);
 
-    ///PUT api/v1/user/updatePassword
+    //PUT api/v1/user/updatePassword
     let update_hr_password_api = user_path
         .and(warp::path("user"))
         .and(warp::path("updatePassword"))
@@ -106,7 +105,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_password);
 
-    ///PUT api/v1/admin/updatePassword
+    //PUT api/v1/admin/updatePassword
     let update_admin_password_api = user_path
         .and(warp::path("admin"))
         .and(warp::path("updatePassword"))
@@ -117,7 +116,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_password);
 
-    ///PUT api/v1/user/deleteUser
+    //PUT api/v1/user/deleteUser
     let delete_user_api = user_path
         .and(warp::path("user"))
         .and(warp::path("deleteUser"))
@@ -128,7 +127,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(delete);
 
-    ///PUT api/v1/user/deleteUser
+    //PUT api/v1/user/deleteUser
     let delete_hr_api = user_path
         .and(warp::path("user"))
         .and(warp::path("deleteUser"))
@@ -139,7 +138,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(delete);
 
-    ///PUT api/v1/admin/deleteAdmin
+    //PUT api/v1/admin/deleteAdmin
     let delete_admin_api = user_path
         .and(warp::path("admin"))
         .and(warp::path("deleteAdmin"))
@@ -150,9 +149,9 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(delete);
 
-    ///PUT api/v1/user/setHr
+    //PUT api/v1/admin/setHr
     let set_hr_api = user_path
-        .and(warp::path("user"))
+        .and(warp::path("admin"))
         .and(warp::path("setHr"))
         .and(warp::path::end())
         .and(warp::put())
@@ -161,7 +160,7 @@ pub fn user_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(set_hr_role);
 
-    ///PUT api/v1/admin/setAdmin
+    //PUT api/v1/admin/setAdmin
     let set_admin_api = user_path
         .and(warp::path("admin"))
         .and(warp::path("setAdmin"))
@@ -188,3 +187,10 @@ pub fn user_route(base_path: &'static str, store: Store)
         .or(delete_admin_api)
         .or(set_admin_api)
 }
+//test
+#[cfg(test)]
+#[path = "../_tests/route_user.rs"]
+mod route_user_tests;
+
+
+

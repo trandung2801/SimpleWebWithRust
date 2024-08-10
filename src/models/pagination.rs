@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
 use handle_errors::Error;
-use crate::models::job::JobId;
-use crate::models::resume::ResumeId;
 
 /// Pagination struct which is getting extract
 /// from query params

@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use handle_errors::Error;
 use crate::models::company::CompanyId;
-use crate::models::role::{Role, RoleId, RoleInfo};
 use crate::models::store::Store;
 use crate::models::store_impl_job::JobStoreMethods;
 
@@ -100,4 +99,4 @@ impl JobActions for JobMac {
 // TEST
 #[cfg(test)]
 #[path = "../_tests/model_job.rs"]
-mod tests;
+mod model_job_tests;

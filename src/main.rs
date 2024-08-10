@@ -1,8 +1,10 @@
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
+use tokio::sync::{oneshot, oneshot::Sender};
 use warp::multipart::Part;
 use handle_errors::return_error;
 use routes::user::user_route;
+use crate::config::config::Config;
 use crate::models::store::{Store, StoreActionBasic};
 use crate::routes::company::company_route;
 use crate::routes::job::job_route;
@@ -16,24 +18,24 @@ mod middleware;
 
 #[tokio::main]
 async fn main() {
-    let configEnv = config::configEnv::ConfigEnv::new().expect("Config env not set");
-    let log_filter = format!(
-        "handle_errors={},rust_web_dev={},warp={}",
-        configEnv.log_level, configEnv.log_level, configEnv.log_level
-    );
-    // let db = config::connectDB::init_db().await.expect("Can't init DB");
-    // let db = Arc::new(db);
-    let db_url = &format!(
-        "postgres://{}:{}@{}:{}/{}",
-        configEnv.db_user,
-        configEnv.db_password,
-        configEnv.db_host,
-        configEnv.db_port,
-        configEnv.db_name
-    );
-    let store: Store = <Store as StoreActionBasic>::new(&db_url).await;
-    // let store = Arc::new(store);
+    let config = config::config::Config::new().expect("Config env not set");
 
+    let store = setup_store(&config).await;
+
+    let cors = warp::cors()
+        .allow_any_origin()
+        .allow_header("content-type")
+        .allow_methods(&[
+            Method::PUT,
+            Method::DELETE,
+            Method::GET,
+            Method::POST,
+        ]);
+
+    let log_filter = format!(
+        "handle_errors={},backend={},warp={}",
+        config.log_level, config.log_level, config.log_level
+    );
 
     tracing_subscriber::fmt()
         // Use the filter we built above to determine which traces to record.
@@ -43,6 +45,40 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
+    let user_routes = user_route("api", store.clone());
+    let company_routes = company_route("api", store.clone());
+    let resume_routes = resume_route("api", store.clone());
+    let job_routes = job_route("api", store.clone());
+    let routes = user_routes
+        .or(company_routes)
+        .or(resume_routes)
+        .or(job_routes)
+        .with(cors)
+        .with(warp::trace::request())
+        .recover(return_error);
+
+
+    warp::serve(routes).run(([127, 0, 0, 1], config.port)).await;
+}
+
+pub async fn setup_store(config: &Config) -> Store {
+    let store: Store = <Store as StoreActionBasic>::new(&format!(
+        "postgres://{}:{}@{}:{}/{}",
+        config.db_user,
+        config.db_password,
+        config.db_host,
+        config.db_port,
+        config.db_name
+    )).await;
+
+    store
+}
+
+pub struct OneshotHandler {
+    pub sender: Sender<i32>
+}
+pub async fn oneshot(store: Store, address_listen: String) -> OneshotHandler
+{
     let cors = warp::cors()
         .allow_any_origin()
         .allow_header("content-type")
@@ -65,5 +101,14 @@ async fn main() {
         .with(warp::trace::request())
         .recover(return_error);
 
-    warp::serve(routes).run(([127, 0, 0, 1], configEnv.port)).await;
+    let (tx, rx) = oneshot::channel::<i32>();
+    let socket: std::net::SocketAddr = address_listen
+        .parse()
+        .expect("Not a valid address");
+
+    let (_, server) = warp::serve(routes).bind_with_graceful_shutdown(socket, async {
+        rx.await.ok();
+    });
+    tokio::task::spawn(server);
+    OneshotHandler{sender:tx}
 }

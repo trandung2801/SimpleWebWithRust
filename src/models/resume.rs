@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
 use crate::models::store::{MapResumeJobMethods, Store};
-use crate::models::user::{AuthInfo, UserId};
+use crate::models::user::{UserId};
 use handle_errors::Error;
 use crate::models::job::JobId;
 use crate::models::store_impl_resume::ResumeStoreMethods;
-use crate::models::map_resume_job::MapResumeJobActions;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Resume {
@@ -140,4 +139,4 @@ impl ResumeActions for ResumeMac {
 
 #[cfg(test)]
 #[path = "../_tests/model_resume.rs"]
-mod tests;
+mod model_resume_tests;

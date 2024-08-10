@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use crate::models::store::Store;
-use crate::models::user::AuthInfo;
 use handle_errors::Error;
 use crate::models::store_impl_company::CompanyStoreMethod;
 
@@ -119,4 +118,4 @@ impl CompanyActions for CompanyMac {
 // TEST
 #[cfg(test)]
 #[path = "../_tests/model_company.rs"]
-mod tests;
+mod model_company_tests;

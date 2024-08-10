@@ -1,4 +1,3 @@
-use std::future;
 use chrono::Utc;
 use warp:: {
     filters::header::headers_cloned,
@@ -7,7 +6,6 @@ use warp:: {
 };
 use handle_errors::Error;
 use crate::middleware::jwt::{Jwt, Claims, JwtActions};
-use crate::models::role::RoleId;
 
 const BEARER: &str = "Bearer";
 
@@ -27,6 +25,9 @@ async fn authorize ((role, headers): (i32, HeaderMap<HeaderValue>))
             match Jwt::verify_access_token(&token) {
                 Ok(claims) => {
                     let current_date_time = Utc::now();
+                    if claims.is_delete == true {
+                        return Err(warp::reject())
+                    }
                     if claims.exp < current_date_time.timestamp() as usize {
                         return Err(warp::reject())
                     }

@@ -1,12 +1,12 @@
-use crate::config::configEnv::ConfigEnv;
+use crate::config::config::Config;
 use crate::models::job::JobId;
 use crate::models::map_resume_job::{ NewMapResumeJob, MapResumeJobActions, MapResumeJobMac};
 use crate::models::resume::ResumeId;
 use crate::models::store::{Store, StoreActionBasic};
 #[tokio::test]
-async fn company_test() -> Result<(), handle_errors::Error>
+async fn store_test() -> Result<(), handle_errors::Error>
 {
-    let config_env = ConfigEnv::new().expect("Config env not set");
+    let config_env = Config::new().expect("Config env not set");
 
     let db_url = &format!(
         "postgres://{}:{}@{}:{}/{}",

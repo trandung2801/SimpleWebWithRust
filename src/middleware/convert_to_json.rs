@@ -1,4 +1,3 @@
-use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use crate::models::company::{Company};
 use crate::models::job::{Job};
@@ -20,25 +19,19 @@ pub enum Data {
     ListRole(Vec<Role>),
     ListJob(Vec<Job>),
     ListResume(Vec<Resume>),
-
-
-
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PayloadWithData {
-    // pub status_code: StatusCode,
     pub message: String,
     pub data: Data
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PayloadNoData{
-    // pub status_code: StatusCode,
     pub message: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PayloadForLogin{
-    // pub status_code: StatusCode,
     pub message: String,
     pub access_token: String,
     pub data: Data

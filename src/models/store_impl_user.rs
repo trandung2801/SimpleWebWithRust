@@ -5,9 +5,10 @@ use crate::models::user::{AuthInfo, User, UserId, UserInfo};
 
 use handle_errors::Error;
 use sqlx::{
-    postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use sqlx::postgres::PgRow;
+
 pub trait UserStoreMethods {
     async fn create_user(self, new_user: AuthInfo)
                          -> Result<UserInfo, Error>;
@@ -33,7 +34,7 @@ impl UserStoreMethods for Store {
                              -> Result<UserInfo, Error>
     {
         match sqlx::query("INSERT INTO users (email, password, company_id, role_id, is_delete) \
-                            VALUES ($1, $2, $3, $4, $5)\
+                            VALUES ($1, $2, $3, $4, $5) \
                             RETURNING id, email, company_id, role_id, is_delete")
             .bind(new_user.email)
             .bind(new_user.password)

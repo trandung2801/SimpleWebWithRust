@@ -1,12 +1,12 @@
-use crate::config::configEnv::ConfigEnv;
+use crate::config::config::Config;
+use crate::models::store::{Store, StoreActionBasic};
 use crate::models::company::CompanyId;
 use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, RoleId, USER_ROLE_ID};
-use crate::models::store::{Store, StoreActionBasic};
 use crate::models::user::{AuthInfo, UserActions, UserId, UserMac, UserInfo};
 #[tokio::test]
 async fn user_test() -> Result<(), handle_errors::Error>
 {
-    let config_env = ConfigEnv::new().expect("Config env not set");
+    let config_env = Config::new().expect("Config env not set");
 
     let db_url = &format!(
         "postgres://{}:{}@{}:{}/{}",
@@ -18,20 +18,8 @@ async fn user_test() -> Result<(), handle_errors::Error>
     );
     let store = <Store as StoreActionBasic>::new(&db_url).await;
 
-    print!("Running register new user ...");
-    let new_user = AuthInfo{
-        email: "123@gmail.com".to_string(),
-        password: "123456".to_string(),
-    };
-    match UserMac::create(store.clone(), new_user).await {
-        Ok(_) => println!("✓"),
-        Err(e) => {
-            return Err(e);
-        }
-    }
-
     print!("Running get user by email ...");
-    let email = "123@gmail.com".to_string();
+    let email = "user1@gmail.com".to_string();
     match UserMac::get_by_email(store.clone(), &email).await {
         Ok(_) => println!("✓"),
         Err(e) => {
@@ -40,7 +28,7 @@ async fn user_test() -> Result<(), handle_errors::Error>
     }
 
     print!("Running get user by id ...");
-    match UserMac::get_by_id(store.clone(), UserId(1)).await {
+    match UserMac::get_by_id(store.clone(), UserId(3)).await {
         Ok(_) => println!("✓"),
         Err(e) => {
             return Err(e);
@@ -57,8 +45,8 @@ async fn user_test() -> Result<(), handle_errors::Error>
 
     print!("Running update user ...");
     let user_update = UserInfo {
-        id: UserId(1),
-        email: "123@gmail.com".to_string(),
+        id: UserId(8),
+        email: "user3@gmail.com".to_string(),
         company_id: CompanyId(1),
         role_id: RoleId(USER_ROLE_ID),
         is_delete: false,
@@ -72,7 +60,7 @@ async fn user_test() -> Result<(), handle_errors::Error>
 
     print!("Running update password user ...");
     let update_password = AuthInfo {
-        email: "123@gmail.com".to_string(),
+        email: "user3@gmail.com".to_string(),
         password: "123456789".to_string()
     };
     match UserMac::update_password(store.clone(),  update_password).await {
@@ -84,8 +72,8 @@ async fn user_test() -> Result<(), handle_errors::Error>
 
     print!("Running set hr role for user ...");
     let user_set_hr = UserInfo {
-        id: UserId(1),
-        email: "123@gmail.com".to_string(),
+        id: UserId(8),
+        email: "user3@gmail.com".to_string(),
         company_id: CompanyId(1),
         role_id: RoleId(USER_ROLE_ID),
         is_delete: false,
@@ -99,8 +87,8 @@ async fn user_test() -> Result<(), handle_errors::Error>
 
     print!("Running set admin role for user ...");
     let user_set_hr = UserInfo {
-        id: UserId(1),
-        email: "123@gmail.com".to_string(),
+        id: UserId(8),
+        email: "user3@gmail.com".to_string(),
         company_id: CompanyId(1),
         role_id: RoleId(HR_ROLE_ID),
         is_delete: false,
@@ -113,7 +101,7 @@ async fn user_test() -> Result<(), handle_errors::Error>
     }
 
     print!("Running delete user ...");
-    match UserMac::delete(store.clone(), UserId(1)).await {
+    match UserMac::delete(store.clone(), UserId(8)).await {
         Ok(_) => println!("✓"),
         Err(e) => {
             return Err(e);

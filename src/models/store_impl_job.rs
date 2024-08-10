@@ -4,9 +4,9 @@ use crate::models::store::Store;
 
 use handle_errors::Error;
 use sqlx::{
-    postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use sqlx::postgres::PgRow;
 
 pub trait JobStoreMethods {
     async fn create_job(self, new_job: NewJob)

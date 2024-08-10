@@ -157,4 +157,4 @@ impl UserActions for UserMac {
 // TEST
 #[cfg(test)]
 #[path = "../_tests/model_user.rs"]
-mod tests;
+mod model_user_tests;

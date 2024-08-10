@@ -16,6 +16,7 @@ pub struct Claims {
     pub id: UserId,
     pub email: String,
     pub role: RoleId,
+    pub is_delete: bool,
     pub iat: usize,
     pub exp: usize,
 }
@@ -46,6 +47,7 @@ impl JwtActions for Jwt {
             id: user.id.unwrap(),
             email: user.email,
             role: user.role_id,
+            is_delete: user.is_delete,
             iat: iat,
             exp: exp
         };
@@ -91,6 +93,7 @@ impl JwtActions for Jwt {
             id: user.id.unwrap(),
             email: user.email,
             role: user.role_id,
+            is_delete:user.is_delete,
             iat: iat,
             exp: exp
         };

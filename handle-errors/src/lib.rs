@@ -21,6 +21,7 @@ pub enum Error {
     MiddlewareReqwestAPIError(MiddlewareReqwestError),
     ClientError(APILayerError),
     ServerError(APILayerError),
+    LoadConfigErr(serde_yaml::Error),
 
     WrongPassword,
     CannotDecryptToken,
@@ -53,6 +54,7 @@ impl std::fmt::Display for Error {
             Error::MiddlewareReqwestAPIError(err) => write!(f, "External API error: {}", err),
             Error::ClientError(err) => write!(f, "External Client error: {}", err),
             Error::ServerError(err) => write!(f, "External Server error: {}", err),
+            Error::LoadConfigErr(err) => write!(f, "Load config error: {}", err),
 
             Error::WrongPassword => write!(f, "Wrong password"),
             Error::CannotDecryptToken => write!(f, "Cannot decrypt error"),

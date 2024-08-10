@@ -1,4 +1,4 @@
-use crate::config::configEnv::ConfigEnv;
+use crate::config::config::Config;
 use crate::models::company::{CompanyId, CompanyMac};
 use crate::models::job::JobId;
 use crate::models::resume::{NewResume, Resume, ResumeMac, ResumeActions, ResumeId};
@@ -8,7 +8,7 @@ use crate::models::user::UserId;
 #[tokio::test]
 async fn resume_test() -> Result<(), handle_errors::Error>
 {
-    let config_env = ConfigEnv::new().expect("Config env not set");
+    let config_env = Config::new().expect("Config env not set");
 
     let db_url = &format!(
         "postgres://{}:{}@{}:{}/{}",
