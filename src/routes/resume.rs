@@ -1,7 +1,7 @@
 use warp::Filter;
 use crate::controllers::resume::{create_resume, delete_resume, get_list_resume_by_job, get_list_resume_by_user_id, get_resume, update_resume};
 use crate::middleware::authen::auth;
-use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, USER_ROLE_ID};
+use crate::models::role::{USER_ROLE_ID};
 use crate::models::store::Store;
 
 pub fn resume_route(base_path: &'static str, store: Store)
@@ -13,7 +13,7 @@ pub fn resume_route(base_path: &'static str, store: Store)
 
     let store_filter = warp::any().map(move || store.clone());
 
-    ///POST api/v1/resume/createResume
+    //POST api/v1/resume/createResume
     let create_api = resume_path
         .and(warp::path("createResume"))
         .and(warp::path::end())
@@ -23,7 +23,7 @@ pub fn resume_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(create_resume);
 
-    ///GET api/v1/resume/getResume/:id
+    //GET api/v1/resume/getResume/:id
     let get_resume_api = resume_path
         .and(warp::get())
         .and(warp::path("getResume"))
@@ -33,7 +33,7 @@ pub fn resume_route(base_path: &'static str, store: Store)
         .and(warp::path::end())
         .and_then(get_resume);
 
-    ///GET api/v1/resume/listResume?limit=x&offset=y
+    //GET api/v1/resume/listResume?limit=x&offset=y
     let get_list_resume_user_api = resume_path
         .and(warp::get())
         .and(warp::path("listResume"))
@@ -43,7 +43,7 @@ pub fn resume_route(base_path: &'static str, store: Store)
         .and(warp::query())
         .and_then(get_list_resume_by_user_id);
 
-    ///GET api/v1/resume/listResume?limit=x&offset=y
+    //GET api/v1/resume/listResume?limit=x&offset=y
     let get_list_resume_job_api = resume_path
         .and(warp::get())
         .and(warp::path("listResume"))
@@ -52,7 +52,7 @@ pub fn resume_route(base_path: &'static str, store: Store)
         .and(warp::query())
         .and_then(get_list_resume_by_job);
 
-    ///PUT api/v1/resume/updateResume
+    //PUT api/v1/resume/updateResume
     let update_resume_api = resume_path
         .and(warp::path("updateResume"))
         .and(warp::path::end())
@@ -62,7 +62,7 @@ pub fn resume_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_resume);
 
-    ///PUT api/v1/resume/deleteResume
+    //PUT api/v1/resume/deleteResume
     let delete_resume_api = resume_path
         .and(warp::path("deleteResume"))
         .and(warp::path::end())

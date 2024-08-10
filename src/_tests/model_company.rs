@@ -1,4 +1,4 @@
-use crate::config::configEnv::ConfigEnv;
+use crate::config::config::Config;
 use crate::models::store::{Store, StoreActionBasic};
 use crate::models::company::{CompanyMac, NewCompany, CompanyActions, CompanyId, Company};
 
@@ -6,7 +6,7 @@ use crate::models::company::{CompanyMac, NewCompany, CompanyActions, CompanyId, 
 #[tokio::test]
 async fn company_test() -> Result<(), handle_errors::Error>
 {
-    let config_env = ConfigEnv::new().expect("Config env not set");
+    let config_env = Config::new().expect("Config env not set");
 
     let db_url = &format!(
         "postgres://{}:{}@{}:{}/{}",
@@ -59,7 +59,7 @@ async fn company_test() -> Result<(), handle_errors::Error>
 
     print!("Running update company ...");
     let company = Company {
-        id: Some(CompanyId(1)),
+        id: Some(CompanyId(2)),
         name: "Sotanext".to_string(),
         email: "sotanext@gmail.com".to_string(),
         address: "Tang 5 Golden Park So 2 Pham Van Bach".to_string(),
@@ -74,7 +74,7 @@ async fn company_test() -> Result<(), handle_errors::Error>
     }
 
     print!("Running delete company ...");
-    match CompanyMac::delete(store.clone(), CompanyId(1)).await {
+    match CompanyMac::delete(store.clone(), CompanyId(2)).await {
         Ok(_) => println!("✓"),
         Err(e) => {
             return Err(e);

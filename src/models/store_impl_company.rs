@@ -1,7 +1,7 @@
 use sqlx::{
-    postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use sqlx::postgres::PgRow;
 use handle_errors::Error;
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::store::Store;

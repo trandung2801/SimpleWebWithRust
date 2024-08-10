@@ -2,9 +2,9 @@ use crate::models::resume::{Resume, ResumeId, NewResume};
 use crate::models::store::Store;
 
 use sqlx::{
-    postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use sqlx::postgres::PgRow;
 use handle_errors::Error;
 use crate::models::user::UserId;
 

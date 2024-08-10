@@ -3,9 +3,9 @@ use crate::models::store::Store;
 
 use handle_errors::Error;
 use sqlx::{
-    postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use sqlx::postgres::PgRow;
 
 pub trait RoleStoreMethods {
     async fn create_role(self, new_role: RoleInfo)

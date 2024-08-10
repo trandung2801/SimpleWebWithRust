@@ -2,14 +2,10 @@ use sqlx::{
     postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
-use tracing::log::SetLoggerError;
 use handle_errors::Error;
-use crate::models::user::{AuthInfo, User, UserId, UserInfo};
-use crate::models::company::{Company, CompanyId};
-use crate::models::job::{Job, JobId};
+use crate::models::job::{JobId};
 use crate::models::map_resume_job::{NewMapResumeJob, MapResumeJob, MapResumeJobId};
-use crate::models::resume::{Resume, ResumeId};
-use crate::models::role::{Role, RoleId, RoleInfo};
+use crate::models::resume::{ResumeId};
 
 #[derive(Debug, Clone)]
 pub struct Store {
@@ -126,4 +122,4 @@ impl MapResumeJobMethods for Store {
 // TEST
 #[cfg(test)]
 #[path = "../_tests/model_store.rs"]
-mod tests;
+mod model_store_tests;

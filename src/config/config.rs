@@ -1,16 +1,19 @@
 use clap::Parser;
 use dotenv;
 use std::env;
+use serde::Deserialize;
+use std::fs::File;
+use std::io::Read;
 
 /// Q&A web service API
-#[derive(Parser, Debug)]
+#[derive(Deserialize, Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
-pub struct ConfigEnv {
+pub struct Config{
     /// Which errors we want to log (info, warn or error)
     #[clap(short, long, default_value = "error")]
     pub log_level: String,
     /// Which PORT the server is listening to
-    #[clap(short, long, default_value = "3030")]
+    #[clap(short, long, default_value = "8080")]
     pub port: u16,
     /// Database user
     #[clap(long, default_value = "postgres")]
@@ -29,10 +32,18 @@ pub struct ConfigEnv {
     pub db_name: String,
 }
 
-impl ConfigEnv {
-    pub fn new() -> Result<ConfigEnv, handle_errors::Error> {
+impl Config {
+    pub fn new() -> Result<Config, handle_errors::Error> {
+        // //test
+        // let config_path = "config.dev.yaml".to_string();
+        // let mut file = File::open(config_path)?;
+        // let mut contents = String::new();
+        // file.read_to_string(&mut contents);
+        // let config: Config = serde_yaml::from_str(&contents)?;
+
+
         dotenv::dotenv().ok();
-        let config = ConfigEnv::parse();
+        let config = Config::parse();
 
         let port = std::env::var("PORT")
             .ok()
@@ -50,7 +61,7 @@ impl ConfigEnv {
         let db_name =
             env::var("POSTGRES_DB").unwrap_or(config.db_name.to_owned());
 
-        Ok(ConfigEnv {
+        Ok(Config {
             log_level: config.log_level,
             port,
             db_user,
