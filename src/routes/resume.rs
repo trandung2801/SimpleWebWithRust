@@ -33,20 +33,20 @@ pub fn resume_route(base_path: &'static str, store: Store)
         .and(warp::path::end())
         .and_then(get_resume);
 
-    //GET api/v1/resume/listResume?limit=x&offset=y
+    //GET api/v1/resume/listResumeByUser?limit=x&offset=y
     let get_list_resume_user_api = resume_path
         .and(warp::get())
-        .and(warp::path("listResume"))
+        .and(warp::path("listResumeByUser"))
         .and(warp::path::end())
         .and(store_filter.clone())
         .and(auth(USER_ROLE_ID))
         .and(warp::query())
         .and_then(get_list_resume_by_user_id);
 
-    //GET api/v1/resume/listResume?limit=x&offset=y
+    //GET api/v1/resume/listResumeByJob?limit=x&offset=y&jobId=z
     let get_list_resume_job_api = resume_path
         .and(warp::get())
-        .and(warp::path("listResume"))
+        .and(warp::path("listResumeByJob"))
         .and(warp::path::end())
         .and(store_filter.clone())
         .and(warp::query())

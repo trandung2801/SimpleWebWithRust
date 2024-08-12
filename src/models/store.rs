@@ -121,5 +121,5 @@ impl MapResumeJobMethods for Store {
 
 // TEST
 #[cfg(test)]
-#[path = "../_tests/model_store.rs"]
+#[path = "../tests/model_store.rs"]
 mod model_store_tests;

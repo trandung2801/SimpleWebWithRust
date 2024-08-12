@@ -137,18 +137,19 @@ impl JobStoreMethods for Store {
     {
         match sqlx::query(
             "Update jobs \
-                            SET job_name = $1, company_id = $2, location = $3, \
-                            quantity = $4, salary = $5, job_level= $6, \
-                            description = $7 \
+                            SET job_name = $1, location = $2, \
+                            quantity = $3, salary = $4, job_level= $5, \
+                            description = $6 \
+                            where id = $7 \
                             RETURNING id, job_name, company_id, location, quantity,\
                                         salary, job_level, description, is_delete")
             .bind(job.job_name)
-            .bind(job.company_id.0)
             .bind(job.location)
             .bind(job.quantity)
             .bind(job.salary)
             .bind(job.job_level)
             .bind(job.description)
+            .bind(job.id.unwrap().0)
             .map(|row: PgRow| Job {
                 id: Some(JobId(row.get("id"))),
                 job_name:row.get("job_name"),

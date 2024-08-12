@@ -189,7 +189,7 @@ pub fn user_route(base_path: &'static str, store: Store)
 }
 //test
 #[cfg(test)]
-#[path = "../_tests/route_user.rs"]
+#[path = "../tests/route_user.rs"]
 mod route_user_tests;
 
 

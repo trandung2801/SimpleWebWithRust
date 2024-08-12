@@ -9,3 +9,16 @@ CREATE TABLE IF NOT EXISTS resumes (
     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_on TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+INSERT INTO resumes (user_id, email, url, is_delete)
+values (7 , 'user2@gmail.com', 'abcxyz', false);
+
+INSERT INTO resumes (user_id, email, url, is_delete)
+values (7 , 'user2@gmail.com', 'abcxyz', false);
+
+INSERT INTO resumes (user_id, email, url, is_delete)
+values (6, 'user1@gmail.com', 'abcxyz', false);
+
+INSERT INTO resumes (user_id, email, url, is_delete)
+values (6, 'user1@gmail.com', 'abcxyz', true);
+

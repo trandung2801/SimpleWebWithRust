@@ -7,3 +7,12 @@ CREATE TABLE IF NOT EXISTS roles (
     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_on TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+INSERT INTO roles (role, is_delete)
+values ('admin', false);
+
+INSERT INTO roles (role, is_delete)
+values ('user', false);
+
+INSERT INTO roles (role, is_delete)
+values ('hr', false);
