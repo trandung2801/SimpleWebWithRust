@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use reqwest::StatusCode;
-use tracing::{event, Level};
+use tracing::{event, instrument, Level};
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::middleware::jwt::Claims;
 use crate::models::job::{JobMac, NewJob, JobActions, JobId, Job};
@@ -8,7 +8,7 @@ use crate::models::store::Store;
 use crate::models::user::{UserMac, UserActions};
 use crate::models::pagination::{Pagination, PaginationMethods};
 
-
+#[instrument(level = "info")]
 pub async fn create_job(store: Store, claims: Claims, new_job: NewJob)
                         -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -46,6 +46,7 @@ pub async fn create_job(store: Store, claims: Claims, new_job: NewJob)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_job(store: Store, job_id: i32)
                         -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -62,6 +63,7 @@ pub async fn get_job(store: Store, job_id: i32)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_list_job(store: Store, params: HashMap<String, String>)
                                         -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -84,6 +86,7 @@ pub async fn get_list_job(store: Store, params: HashMap<String, String>)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn update_job(store: Store, claims: Claims, job: Job)
                            -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -111,6 +114,7 @@ pub async fn update_job(store: Store, claims: Claims, job: Job)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn delete_job(store: Store, claims: Claims, job: Job)
                            -> Result<impl warp::Reply, warp::Rejection>
 {

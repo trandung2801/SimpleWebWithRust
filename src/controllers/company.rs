@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use tracing::{event, Level};
 use warp::http::StatusCode;
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::middleware::jwt::{Claims};
@@ -7,7 +6,9 @@ use crate::models::company::{CompanyMac, CompanyActions, Company, CompanyId, New
 use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::store::Store;
 use crate::models::user::{UserActions};
+use tracing::instrument;
 
+#[instrument(level = "info")]
 pub async fn create_company(store: Store, claims: Claims, new_company: NewCompany)
                             -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -41,10 +42,10 @@ pub async fn create_company(store: Store, claims: Claims, new_company: NewCompan
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_company(store: Store, company_id: i32)
                                  -> Result<impl warp::Reply, warp::Rejection>
 {
-    event!(target: "backend", Level::INFO, "querying company");
     match CompanyMac::get_by_id(store, CompanyId(company_id)).await {
         Ok(res) =>
             {
@@ -58,13 +59,13 @@ pub async fn get_company(store: Store, company_id: i32)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_list_company(store: Store, params: HashMap<String, String>)
                                        -> Result<impl warp::Reply, warp::Rejection>
 {
     let mut pagination = Pagination::default();
 
     if !params.is_empty() {
-        event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
     match CompanyMac::list(store, pagination.limit, pagination.offset).await {
@@ -80,7 +81,7 @@ pub async fn get_list_company(store: Store, params: HashMap<String, String>)
     }
 }
 
-
+#[instrument(level = "info")]
 pub async fn update_company(store: Store, claims: Claims, company: Company)
                                     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -107,6 +108,7 @@ pub async fn update_company(store: Store, claims: Claims, company: Company)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn delete_company(store: Store, claims: Claims, company: Company)
                                -> Result<impl warp::Reply, warp::Rejection>
 {

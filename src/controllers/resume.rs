@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use tracing::{event, Level};
+use tracing::{event, instrument, Level};
 use warp::http::StatusCode;
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::middleware::jwt::Claims;
@@ -9,7 +9,7 @@ use crate::models::resume::{NewResume, ResumeMac, ResumeActions, ResumeId, Resum
 use crate::models::store::Store;
 use crate::models::user::{UserActions};
 
-
+#[instrument(level = "info")]
 pub async fn create_resume(store: Store, claims: Claims, new_resume: NewResume)
                            -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -30,6 +30,7 @@ pub async fn create_resume(store: Store, claims: Claims, new_resume: NewResume)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_resume(store: Store, claims: Claims, resume_id: i32)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -46,6 +47,7 @@ pub async fn get_resume(store: Store, claims: Claims, resume_id: i32)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_list_resume_by_user_id(store: Store, claims: Claims, params: HashMap<String, String>)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -68,6 +70,7 @@ pub async fn get_list_resume_by_user_id(store: Store, claims: Claims, params: Ha
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_list_resume_by_job(store: Store, params: HashMap<String, String>)
                                         -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -92,6 +95,7 @@ pub async fn get_list_resume_by_job(store: Store, params: HashMap<String, String
     }
 }
 
+#[instrument(level = "info")]
 pub async fn update_resume(store: Store, claims: Claims, resume: Resume)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -114,6 +118,7 @@ pub async fn update_resume(store: Store, claims: Claims, resume: Resume)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn delete_resume(store: Store, claims: Claims, resume: Resume)
                             -> Result<impl warp::Reply, warp::Rejection>
 {

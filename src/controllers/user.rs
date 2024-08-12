@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use argon2::Config;
 use rand::Rng;
 use serde_json::json;
-use tracing::{event, Level};
+use tracing::{event, instrument, Level};
 use handle_errors::Error;
 use warp::http::StatusCode;
 use warp::Filter;
@@ -26,6 +26,7 @@ pub fn verify_password(hash: &str, password: &[u8])
     argon2::verify_encoded(hash, password)
 }
 
+#[instrument(level = "info")]
 pub async fn register(store: Store, new_user: AuthInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -57,6 +58,7 @@ pub async fn register(store: Store, new_user: AuthInfo)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn login(store: Store, login_info: AuthInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -89,6 +91,7 @@ pub async fn login(store: Store, login_info: AuthInfo)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_user_by_id(store: Store, user_id: i32)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -107,6 +110,7 @@ pub async fn get_user_by_id(store: Store, user_id: i32)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn get_list_users(store: Store, params: HashMap<String, String>)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -129,7 +133,7 @@ pub async fn get_list_users(store: Store, params: HashMap<String, String>)
     }
 }
 
-
+#[instrument(level = "info")]
 pub async fn update_user(store: Store, claims: Claims, user_update: UserInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -150,6 +154,7 @@ pub async fn update_user(store: Store, claims: Claims, user_update: UserInfo)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn update_password(store: Store, claims: Claims, user_update: AuthInfo)
                                -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -174,6 +179,7 @@ pub async fn update_password(store: Store, claims: Claims, user_update: AuthInfo
     }
 }
 
+#[instrument(level = "info")]
 pub async fn set_admin_role(store: Store, claims: Claims, user: UserInfo)
                                         -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -191,6 +197,7 @@ pub async fn set_admin_role(store: Store, claims: Claims, user: UserInfo)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn set_hr_role(store: Store, claims: Claims, user: UserInfo)
                             -> Result<impl warp::Reply, warp::Rejection>
 {
@@ -207,6 +214,7 @@ pub async fn set_hr_role(store: Store, claims: Claims, user: UserInfo)
     }
 }
 
+#[instrument(level = "info")]
 pub async fn delete(store: Store, claims: Claims, user_delete: UserInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {

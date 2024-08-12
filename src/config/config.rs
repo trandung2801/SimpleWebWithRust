@@ -1,76 +1,52 @@
-use clap::Parser;
-use dotenv;
-use std::env;
 use serde::Deserialize;
-use std::fs::File;
-use std::io::Read;
+use clap::Parser;
+use config::{Config as ConfigLoader, File, FileFormat};
 
-/// Q&A web service API
-#[derive(Deserialize, Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-pub struct Config{
-    /// Which errors we want to log (info, warn or error)
-    #[clap(short, long, default_value = "error")]
-    pub log_level: String,
-    /// Which PORT the server is listening to
-    #[clap(short, long, default_value = "8080")]
-    pub port: u16,
+#[derive(Deserialize, Debug, Clone)]
+pub struct PostgresConfig{
     /// Database user
-    #[clap(long, default_value = "postgres")]
     pub db_user: String,
     /// Database user
-    #[clap(long, default_value = "123456")]
     pub db_password: String,
     /// URL for the postgres database
-    #[clap(long, default_value = "localhost")]
     pub db_host: String,
     /// PORT number for the database connection
-    #[clap(long, default_value = "5432")]
     pub db_port: u16,
     /// Database name
-    #[clap(long, default_value = "jobdb")]
     pub db_name: String,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub struct Server{
+    /// Which HOST the server is listening to
+    pub host: String,
+    /// Which PORT the server is listening to
+    pub port: u16
+}
+#[derive(Deserialize, Debug, Clone)]
+pub struct Config{
+    /// Which errors we want to log (info, warn or error)
+    pub log_level: String,
+    pub server: Server,
+    pub database: Option<String>,
+    pub postgres: PostgresConfig,
+}
+
+#[derive(Parser, Debug)]
+pub struct Args {
+    /// Config file
+    #[clap(long, default_value = "src/config/config-default.yaml")]
+    pub config_path: String,
+}
+
 impl Config {
-    pub fn new() -> Result<Config, handle_errors::Error> {
-        // //test
-        // let config_path = "config.dev.yaml".to_string();
-        // let mut file = File::open(config_path)?;
-        // let mut contents = String::new();
-        // file.read_to_string(&mut contents);
-        // let config: Config = serde_yaml::from_str(&contents)?;
+    pub fn new() -> Result<Config, config::ConfigError> {
+        let args = Args::parse();
+        let content = ConfigLoader::builder()
+            .add_source(File::new(&args.config_path, FileFormat::Yaml))
+            .build()?;
+        let config: Config = content.try_deserialize::<Config>()?;
 
-
-        dotenv::dotenv().ok();
-        let config = Config::parse();
-
-        let port = std::env::var("PORT")
-            .ok()
-            .map(|val| val.parse::<u16>())
-            .unwrap_or(Ok(config.port))
-            .map_err(|e| handle_errors::Error::ParseError(e))?;
-
-        let db_user =
-            env::var("POSTGRES_USER").unwrap_or(config.db_user.to_owned());
-        let db_password = env::var("POSTGRES_PASSWORD").unwrap();
-        let db_host =
-            env::var("POSTGRES_HOST").unwrap_or(config.db_host.to_owned());
-        let db_port = env::var("POSTGRES_PORT")
-            .unwrap_or(config.db_port.to_string());
-        let db_name =
-            env::var("POSTGRES_DB").unwrap_or(config.db_name.to_owned());
-
-        Ok(Config {
-            log_level: config.log_level,
-            port,
-            db_user,
-            db_password,
-            db_host,
-            db_port: db_port
-                .parse::<u16>()
-                .map_err(|e| handle_errors::Error::ParseError(e))?,
-            db_name,
-        })
+        Ok(config)
     }
 }
