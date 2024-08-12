@@ -117,5 +117,5 @@ impl CompanyActions for CompanyMac {
 
 // TEST
 #[cfg(test)]
-#[path = "../_tests/model_company.rs"]
+#[path = "../tests/model_company.rs"]
 mod model_company_tests;

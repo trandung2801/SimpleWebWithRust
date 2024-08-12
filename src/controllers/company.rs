@@ -122,6 +122,10 @@ pub async fn delete_company(store: Store, claims: Claims, company: Company)
     }
 }
 
+#[cfg(test)]
+#[path = "../tests/route_resume.rs"]
+mod route_resume_tests;
+
 
 
 

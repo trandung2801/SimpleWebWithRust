@@ -12,7 +12,7 @@ pub fn job_route(base_path: &'static str, store: Store)
         .and(warp::path("job"));
     let store_filter = warp::any().map(move || store.clone());
 
-    //POST api/v1/resume/createJob
+    //POST api/v1/job/createJob
     let create_api = job_path
         .and(warp::path("createJob"))
         .and(warp::path::end())
@@ -22,7 +22,7 @@ pub fn job_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(create_job);
 
-    //GET api/v1/resume/getJob/:id
+    //GET api/v1/job/getJob/:id
     let get_job_api = job_path
         .and(warp::get())
         .and(warp::path("getJob"))
@@ -31,7 +31,7 @@ pub fn job_route(base_path: &'static str, store: Store)
         .and(warp::path::end())
         .and_then(get_job);
 
-    //GET api/v1/resume/listJob?limit=x&offset=y
+    //GET api/v1/job/listJob?limit=x&offset=y
     let get_list_job_api = job_path
         .and(warp::get())
         .and(warp::path("listJob"))
@@ -40,7 +40,7 @@ pub fn job_route(base_path: &'static str, store: Store)
         .and(warp::query())
         .and_then(get_list_job);
 
-    //PUT api/v1/resume/updateJob
+    //PUT api/v1/job/updateJob
     let update_job_api = job_path
         .and(warp::path("updateJob"))
         .and(warp::path::end())
@@ -50,7 +50,7 @@ pub fn job_route(base_path: &'static str, store: Store)
         .and(warp::body::json())
         .and_then(update_job);
 
-    //PUT api/v1/resume/deleteJob
+    //PUT api/v1/job/deleteJob
     let delete_job_api = job_path
         .and(warp::path("deleteJob"))
         .and(warp::path::end())
@@ -68,6 +68,6 @@ pub fn job_route(base_path: &'static str, store: Store)
 }
 
 #[cfg(test)]
-#[path = "../_tests/route_job.rs"]
+#[path = "../tests/route_job.rs"]
 mod route_job_tests;
 

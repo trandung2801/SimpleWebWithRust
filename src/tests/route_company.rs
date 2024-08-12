@@ -1,11 +1,9 @@
-use std::process::Command;
-use std::io::{self, Write};
 use futures_util::FutureExt;
 use crate::config::config::{Config};
 use crate::models::store::{StoreActionBasic};
 use crate::{oneshot, setup_store};
 use crate::middleware::convert_to_json::PayloadForLogin;
-use crate::models::company::{Company, CompanyId};
+use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::user::{AuthInfo};
 
 #[tokio::test]
@@ -35,6 +33,19 @@ async fn company_route_test() -> Result<(), handle_errors::Error>
         }
     };
 
+    print!("Running test company route: POST login ...");
+    let access_token: String;
+    match std::panic::AssertUnwindSafe(login_test(&login_info)).catch_unwind().await {
+        Ok(token) => {
+            access_token = token;
+            println!("✓")
+        },
+        Err(_) => {
+            let _ = handler.sender.send(1);
+            std::process::exit(1);
+        }
+    };
+
     print!("Running test company route: GET company ...");
     match std::panic::AssertUnwindSafe(get_company_test()).catch_unwind().await {
         Ok(_) => println!("✓"),
@@ -46,6 +57,21 @@ async fn company_route_test() -> Result<(), handle_errors::Error>
 
     print!("Running test company route: GET list company ...");
     match std::panic::AssertUnwindSafe(get_list_company_test()).catch_unwind().await {
+        Ok(_) => println!("✓"),
+        Err(_) => {
+            let _ = handler.sender.send(1);
+            std::process::exit(1);
+        }
+    };
+
+    print!("Running test company route: POST create company ...");
+    let new_company = NewCompany{
+        email: "sotatek999@gmail.com".to_string(),
+        name: "Sotatek999".to_string(),
+        address: "2 Pham Van Bach".to_string(),
+        description: "Company out source for blockchain and web 3".to_string()
+    };
+    match std::panic::AssertUnwindSafe(create_company_test(&access_token, &new_company)).catch_unwind().await {
         Ok(_) => println!("✓"),
         Err(_) => {
             let _ = handler.sender.send(1);
@@ -119,6 +145,19 @@ async fn get_list_company_test() {
         .await
         .unwrap();
     assert_eq!(res.status(), 200);
+}
+
+
+async fn create_company_test(access_token: &String, new_company: &NewCompany) {
+    let client = reqwest::Client::new();
+    let res = client
+        .post("http://localhost:3031/api/v1/company/createCompany")
+        .header("Authorization", format!("Bearer{}", access_token))
+        .json(&new_company)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), 201);
 }
 
 

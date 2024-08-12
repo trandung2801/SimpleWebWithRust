@@ -143,11 +143,9 @@ impl ResumeStoreMethods for Store {
                                -> Result<Resume, Error>
     {
         match sqlx::query(
-            "Update resumes SET user_id = $1, email = $2, url = $3 \
-                            WHERE id = $4 \
+            "Update resumes SET url = $1 \
+                            WHERE id = $2 \
                             RETURNING id, user_id, email, url, is_delete")
-            .bind(resume.user_id.0)
-            .bind(resume.email)
             .bind(resume.url)
             .bind(resume.id.unwrap().0)
             .map(|row: PgRow| Resume {

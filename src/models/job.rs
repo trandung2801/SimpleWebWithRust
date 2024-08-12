@@ -98,5 +98,5 @@ impl JobActions for JobMac {
 
 // TEST
 #[cfg(test)]
-#[path = "../_tests/model_job.rs"]
+#[path = "../tests/model_job.rs"]
 mod model_job_tests;

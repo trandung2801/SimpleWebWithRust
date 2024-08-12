@@ -22,8 +22,8 @@ async fn resume_test() -> Result<(), handle_errors::Error>
 
     print!("Running create new resume ...");
     let new_resume = NewResume{
-        user_id: UserId(1),
-        email: "123@gmail.com".to_string(),
+        user_id: UserId(7),
+        email: "user2@gmail.com".to_string(),
         url: "dsadasdasdasdjaslkjda".to_string()
     };
     match ResumeMac::create(store.clone(), new_resume).await {
@@ -34,7 +34,7 @@ async fn resume_test() -> Result<(), handle_errors::Error>
     }
 
     print!("Running get resume by user id ...");
-    match ResumeMac::get_by_user_id(store.clone(), UserId(1)).await {
+    match ResumeMac::get_by_user_id(store.clone(), UserId(7)).await {
         Ok(_) => println!("✓"),
         Err(e) => {
             return Err(e);
@@ -42,7 +42,7 @@ async fn resume_test() -> Result<(), handle_errors::Error>
     }
 
     print!("Running get resume by id ...");
-    match ResumeMac::get_by_id(store.clone(), ResumeId(1)).await {
+    match ResumeMac::get_by_id(store.clone(), ResumeId(2)).await {
         Ok(_) => println!("✓"),
         Err(e) => {
             return Err(e);
@@ -50,7 +50,7 @@ async fn resume_test() -> Result<(), handle_errors::Error>
     }
 
     print!("Running get list resume by user id ...");
-    match ResumeMac::list_by_user_id(store.clone(), Some(10), 1, UserId(1)).await {
+    match ResumeMac::list_by_user_id(store.clone(), Some(10), 1, UserId(7)).await {
         Ok(_) => println!("✓"),
         Err(e) => {
             return Err(e);
@@ -67,9 +67,9 @@ async fn resume_test() -> Result<(), handle_errors::Error>
 
     print!("Running update resume ...");
     let resume = Resume {
-        id: Some(ResumeId(1)),
-        user_id: UserId(1),
-        email: "123@gmail.com".to_string(),
+        id: Some(ResumeId(2)),
+        user_id: UserId(7),
+        email: "user2@gmail.com".to_string(),
         url: "dsadasdasdasdjaslkjda".to_string(),
         is_delete: false
     };
@@ -81,7 +81,7 @@ async fn resume_test() -> Result<(), handle_errors::Error>
     }
 
     print!("Running delete resume ...");
-    match ResumeMac::delete(store.clone(), ResumeId(1)).await {
+    match ResumeMac::delete(store.clone(), ResumeId(2)).await {
         Ok(_) => println!("✓"),
         Err(e) => {
             return Err(e);

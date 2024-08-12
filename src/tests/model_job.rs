@@ -24,7 +24,7 @@ async fn job_test() -> Result<(), handle_errors::Error>
         company_id: CompanyId(1),
         location: "So 2 Pham Van Bach".to_string(),
         quantity: 1,
-        salary: 1_000_000_000,
+        salary: 1_000_000,
         job_level: "Intern".to_string(),
         description: "Intern from UET has knowledge rust".to_string(),
     };
@@ -59,7 +59,7 @@ async fn job_test() -> Result<(), handle_errors::Error>
         company_id: CompanyId(1),
         location: "So 2 Pham Van Bach".to_string(),
         quantity: 1,
-        salary: 1_000_000_000,
+        salary: 1_000_000,
         job_level: "Intern".to_string(),
         description: "Intern from UET has knowledge rust".to_string(),
         is_delete: false,

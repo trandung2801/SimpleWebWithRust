@@ -69,6 +69,6 @@ pub fn company_route(base_path: &'static str, store: Store)
 }
 
 #[cfg(test)]
-#[path = "../_tests/route_company.rs"]
+#[path = "../tests/route_company.rs"]
 mod route_company_tests;
 
