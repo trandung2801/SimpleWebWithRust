@@ -1,0 +1,16 @@
+
+log_level: "info"
+server:
+  host: "127.0.0.1"
+  port: 3030
+
+#default value in project is postgres database
+#if database none or database: "in-memory" to set value is in-memory
+database: "postgres"
+#database: "in-memory"
+postgres:
+  db_user: "postgres"
+  db_password: "123456"
+  db_host: "localhost"
+  db_port: 5432
+  db_name: "jobdb"

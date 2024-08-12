@@ -10,11 +10,11 @@ async fn user_test() -> Result<(), handle_errors::Error>
 
     let db_url = &format!(
         "postgres://{}:{}@{}:{}/{}",
-        config_env.db_user,
-        config_env.db_password,
-        config_env.db_host,
-        config_env.db_port,
-        config_env.db_name
+        config_env.postgres.db_user,
+        config_env.postgres.db_password,
+        config_env.postgres.db_host,
+        config_env.postgres.db_port,
+        config_env.postgres.db_name
     );
     let store = <Store as StoreActionBasic>::new(&db_url).await;
 

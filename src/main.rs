@@ -1,6 +1,7 @@
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
 use tokio::sync::{oneshot, oneshot::Sender};
+use tracing::{info, instrument};
 use warp::multipart::Part;
 use handle_errors::return_error;
 use routes::user::user_route;
@@ -17,10 +18,12 @@ mod config;
 mod middleware;
 
 #[tokio::main]
+#[instrument]
 async fn main() {
     let config = config::config::Config::new().expect("Config env not set");
 
     let store = setup_store(&config).await;
+
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -57,21 +60,52 @@ async fn main() {
         .with(warp::trace::request())
         .recover(return_error);
 
-
-    warp::serve(routes).run(([127, 0, 0, 1], config.port)).await;
+    let address_listen = format!("{}:{}", config.server.host, config.server.port);
+    let socket: std::net::SocketAddr = address_listen
+        .parse()
+        .expect("Not a valid address");
+    // warp::serve(routes).run(([127, 0, 0, 1], config.port)).await;
+    warp::serve(routes).run(socket).await;
 }
 
-pub async fn setup_store(config: &Config) -> Store {
-    let store: Store = <Store as StoreActionBasic>::new(&format!(
-        "postgres://{}:{}@{}:{}/{}",
-        config.db_user,
-        config.db_password,
-        config.db_host,
-        config.db_port,
-        config.db_name
-    )).await;
 
-    store
+pub async fn setup_store(config: &Config) -> Store {
+    // let store: Store = <Store as StoreActionBasic>::new(&format!(
+    //     "postgres://{}:{}@{}:{}/{}",
+    //     config.postgres.db_user,
+    //     config.postgres.db_password,
+    //     config.postgres.db_host,
+    //     config.postgres.db_port,
+    //     config.postgres.db_name
+    // )).await;
+    //
+    // store
+
+    if config.database.is_none() || config.database.clone().unwrap() == "in-memory".to_string() {
+        println!("Using in-memory database");
+        let store: Store = <Store as StoreActionBasic>::new(&format!(
+            "postgres://{}:{}@{}:{}/{}",
+            config.postgres.db_user,
+            config.postgres.db_password,
+            config.postgres.db_host,
+            config.postgres.db_port,
+            config.postgres.db_name
+        )).await;
+
+        store
+    } else {
+        println!("Using postgres database");
+        let store: Store = <Store as StoreActionBasic>::new(&format!(
+            "postgres://{}:{}@{}:{}/{}",
+            config.postgres.db_user,
+            config.postgres.db_password,
+            config.postgres.db_host,
+            config.postgres.db_port,
+            config.postgres.db_name
+        )).await;
+
+        store
+    }
 }
 
 pub struct OneshotHandler {
