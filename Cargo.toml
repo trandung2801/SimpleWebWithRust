@@ -27,3 +27,4 @@ regex = { version = "1", features = ["unicode-case"] }
 jsonwebtoken = "9.3.0"
 config = "0.14.0"
 futures-util = "0.3"
+async-trait = "0.1.81"

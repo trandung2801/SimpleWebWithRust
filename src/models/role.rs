@@ -1,7 +1,8 @@
+use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use handle_errors::Error;
-use crate::models::store::Store;
-use crate::models::store_impl_role::RoleStoreMethods;
+use crate::models::store::{Store, StoreMethods};
+
 
 
 pub const ADMIN_ROLE_ID: i32 = 1;
@@ -26,20 +27,20 @@ pub struct RoleInfo {
 pub struct RoleMac;
 
 pub trait RoleActions {
-    async fn create(store: Store, role_info: RoleInfo)
+    async fn create(store: &Arc<dyn StoreMethods>, role_info: RoleInfo)
                     -> Result<Role, Error>;
-    async fn get_by_id(store: Store, role_id: RoleId)
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, role_id: RoleId)
                        -> Result<Role, Error>;
-    async fn list(store: Store)
+    async fn list(store: &Arc<dyn StoreMethods>)
                   -> Result<Vec<Role>, Error>;
-    async fn update(store: Store, role: Role)
+    async fn update(store: &Arc<dyn StoreMethods>, role: Role)
                     -> Result<Role, Error>;
-    async fn delete(store: Store, role_id: RoleId)
+    async fn delete(store: &Arc<dyn StoreMethods>, role_id: RoleId)
                     -> Result<bool, Error>;
 }
 
 impl RoleActions for RoleMac {
-    async fn create(store: Store, role_info: RoleInfo)
+    async fn create(store: &Arc<dyn StoreMethods>, role_info: RoleInfo)
                         -> Result<Role, Error>
     {
         match store.create_role(role_info).await {
@@ -51,7 +52,7 @@ impl RoleActions for RoleMac {
         }
     }
 
-    async fn get_by_id(store: Store, role_id: RoleId)
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, role_id: RoleId)
                                 -> Result<Role, Error>
     {
         match store.get_role_by_id(role_id).await {
@@ -63,7 +64,7 @@ impl RoleActions for RoleMac {
         }
     }
 
-    async fn list(store: Store)
+    async fn list(store: &Arc<dyn StoreMethods>)
                       -> Result<Vec<Role>, Error>
     {
         match store.get_list_roles().await {
@@ -75,7 +76,7 @@ impl RoleActions for RoleMac {
         }
     }
 
-    async fn update(store: Store, role: Role)
+    async fn update(store: &Arc<dyn StoreMethods>, role: Role)
                         -> Result<Role, Error>
     {
         match store.update_role(role).await {
@@ -87,7 +88,7 @@ impl RoleActions for RoleMac {
         }
     }
 
-    async fn delete(store: Store, role_id: RoleId)
+    async fn delete(store: &Arc<dyn StoreMethods>, role_id: RoleId)
                         -> Result<bool, Error>
     {
         match store.delete_role(role_id).await {

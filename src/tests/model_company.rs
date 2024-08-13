@@ -1,5 +1,5 @@
 use crate::config::config::Config;
-use crate::models::store::{Store, StoreActionBasic};
+use crate::models::store::{Store, StoreMethods};
 use crate::models::company::{CompanyMac, NewCompany, CompanyActions, CompanyId, Company};
 
 
@@ -16,7 +16,7 @@ async fn company_test() -> Result<(), handle_errors::Error>
         config_env.postgres.db_port,
         config_env.postgres.db_name
     );
-    let store = <Store as StoreActionBasic>::new(&db_url).await;
+    let store = Store::new(&db_url).await;
 
     print!("Running create new company ...");
     let new_company = NewCompany{

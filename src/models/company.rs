@@ -1,7 +1,8 @@
+use std::sync::Arc;
 use serde::{Deserialize, Serialize};
-use crate::models::store::Store;
 use handle_errors::Error;
-use crate::models::store_impl_company::CompanyStoreMethod;
+use crate::models::store::{Store, StoreMethods};
+
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Company {
@@ -27,22 +28,22 @@ pub struct NewCompany {
 pub struct CompanyMac;
 
 pub trait CompanyActions {
-    async fn create(store: Store, new_company: NewCompany)
+    async fn create(store: &Arc<dyn StoreMethods>, new_company: NewCompany)
         -> Result<Company, Error>;
-    async fn get_by_email(store: Store, company_email: &String)
+    async fn get_by_email(store: &Arc<dyn StoreMethods>, company_email: &String)
                  -> Result<Company, Error>;
-    async fn get_by_id(store: Store, company_id: CompanyId)
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, company_id: CompanyId)
                           -> Result<Company, Error>;
-    async fn list(store: Store, limit: Option<i32>, offset: i32)
+    async fn list(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32)
                   -> Result<Vec<Company>, Error>;
-    async fn update(store: Store, company: Company)
+    async fn update(store: &Arc<dyn StoreMethods>, company: Company)
                     -> Result<Company, Error>;
-    async fn delete(store: Store, company_id: CompanyId)
+    async fn delete(store: &Arc<dyn StoreMethods>, company_id: CompanyId)
                     -> Result<bool, Error>;
 }
 
 impl CompanyActions for CompanyMac {
-    async fn create(store: Store, new_company: NewCompany)
+    async fn create(store: &Arc<dyn StoreMethods>, new_company: NewCompany)
                         -> Result<Company, Error>
     {
         match store.create_company(new_company).await {
@@ -54,7 +55,7 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn get_by_email(store: Store, company_email: &String)
+    async fn get_by_email(store: &Arc<dyn StoreMethods>, company_email: &String)
                         -> Result<Company, Error>
     {
         match store.get_company_by_email(company_email).await {
@@ -66,7 +67,7 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn get_by_id(store: Store, company_id: CompanyId)
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, company_id: CompanyId)
         -> Result<Company, Error>
     {
         match store.get_company_by_id(company_id).await {
@@ -78,7 +79,7 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn list(store: Store, limit: Option<i32>, offset: i32)
+    async fn list(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32)
                         -> Result<Vec<Company>, Error>
     {
         match store.get_list_company(limit, offset).await {
@@ -90,7 +91,7 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn update(store: Store, company: Company)
+    async fn update(store: &Arc<dyn StoreMethods>, company: Company)
                         -> Result<Company, Error>
     {
         match store.update_company(company).await {
@@ -102,7 +103,7 @@ impl CompanyActions for CompanyMac {
         }
     }
 
-    async fn delete(store: Store, company_id: CompanyId)
+    async fn delete(store: &Arc<dyn StoreMethods>, company_id: CompanyId)
                         -> Result<bool, Error>
     {
         match store.delete_company(company_id).await {

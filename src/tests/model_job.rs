@@ -1,7 +1,7 @@
 use crate::config::config::Config;
 use crate::models::company::CompanyId;
 use crate::models::job::{JobMac, NewJob, JobActions, JobId, Job};
-use crate::models::store::{Store, StoreActionBasic};
+use crate::models::store::{Store, StoreMethods};
 
 #[tokio::test]
 async fn job_test() -> Result<(), handle_errors::Error>
@@ -16,7 +16,7 @@ async fn job_test() -> Result<(), handle_errors::Error>
         config_env.postgres.db_port,
         config_env.postgres.db_name
     );
-    let store = <Store as StoreActionBasic>::new(&db_url).await;
+    let store = Store::new(&db_url).await;
 
     println!("Running create new job ... ");
     let new_job = NewJob {

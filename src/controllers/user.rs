@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use argon2::Config;
 use rand::Rng;
 use serde_json::json;
@@ -11,7 +12,7 @@ use crate::middleware::jwt::{Jwt, Claims, JwtActions};
 use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, RoleId};
 use crate::models::user::{UserInfo, UserMac, AuthInfo, UserActions, UserId};
-use crate::models::store::Store;
+use crate::models::store::{Store, StoreMethods};
 
 pub fn hash_password(password: &[u8])
                      -> String
@@ -27,11 +28,11 @@ pub fn verify_password(hash: &str, password: &[u8])
 }
 
 #[instrument(level = "info")]
-pub async fn register(store: Store, new_user: AuthInfo)
+pub async fn register(store: Arc<dyn StoreMethods>, new_user: AuthInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     let new_email = new_user.email;
-    match UserMac::get_by_email(store.clone(), &new_email).await {
+    match UserMac::get_by_email(&store, &new_email).await {
         Ok(res) => {
             let payload = PayloadNoData {
                 message: "Email invalid".to_string(),
@@ -45,7 +46,7 @@ pub async fn register(store: Store, new_user: AuthInfo)
         email: new_email,
         password: hash_password,
     };
-    match UserMac::create(store, user).await {
+    match UserMac::create(&store, user).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -59,10 +60,10 @@ pub async fn register(store: Store, new_user: AuthInfo)
 }
 
 #[instrument(level = "info")]
-pub async fn login(store: Store, login_info: AuthInfo)
+pub async fn login(store: Arc<dyn StoreMethods>, login_info: AuthInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {
-    match UserMac::get_by_email(store.clone(), &login_info.email).await {
+    match UserMac::get_by_email(&store, &login_info.email).await {
         Ok(user) => match verify_password(
             &user.password,
             login_info.password.as_bytes(),
@@ -71,7 +72,7 @@ pub async fn login(store: Store, login_info: AuthInfo)
                 if verified {
                     match Jwt::issue_access_token(user.clone()) {
                         Ok(access_token) => {
-                            let user_info = UserMac::get_by_id(store.clone(), user.id.unwrap()).await?;
+                            let user_info = UserMac::get_by_id(&store, user.id.unwrap()).await?;
                             let payload = PayloadForLogin {
                                 access_token: access_token,
                                 message: "Login success".to_string(),
@@ -92,12 +93,12 @@ pub async fn login(store: Store, login_info: AuthInfo)
 }
 
 #[instrument(level = "info")]
-pub async fn get_user_by_id(store: Store, user_id: i32)
+pub async fn get_user_by_id(store: Arc<dyn StoreMethods>, user_id: i32)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     println!("user_id: {}", user_id);
     event!(target: "backend", Level::INFO, "querying user");
-    match UserMac::get_by_id(store, UserId(user_id)).await {
+    match UserMac::get_by_id(&store, UserId(user_id)).await {
         Ok(user) =>
             {
                 let payload = PayloadWithData {
@@ -111,7 +112,7 @@ pub async fn get_user_by_id(store: Store, user_id: i32)
 }
 
 #[instrument(level = "info")]
-pub async fn get_list_users(store: Store, params: HashMap<String, String>)
+pub async fn get_list_users(store: Arc<dyn StoreMethods>, params: HashMap<String, String>)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     let mut pagination = Pagination::default();
@@ -120,7 +121,7 @@ pub async fn get_list_users(store: Store, params: HashMap<String, String>)
         event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
-    match UserMac::list(store, pagination.limit, pagination.offset).await {
+    match UserMac::list(&store, pagination.limit, pagination.offset).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -134,14 +135,14 @@ pub async fn get_list_users(store: Store, params: HashMap<String, String>)
 }
 
 #[instrument(level = "info")]
-pub async fn update_user(store: Store, claims: Claims, user_update: UserInfo)
+pub async fn update_user(store: Arc<dyn StoreMethods>, claims: Claims, user_update: UserInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     // valid user
     if claims.id != user_update.id {
         return Err(warp::reject())
     };
-    match UserMac::update_user(store, user_update).await {
+    match UserMac::update_user(&store, user_update).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -155,7 +156,7 @@ pub async fn update_user(store: Store, claims: Claims, user_update: UserInfo)
 }
 
 #[instrument(level = "info")]
-pub async fn update_password(store: Store, claims: Claims, user_update: AuthInfo)
+pub async fn update_password(store: Arc<dyn StoreMethods>, claims: Claims, user_update: AuthInfo)
                                -> Result<impl warp::Reply, warp::Rejection>
 {
     if claims.email != user_update.email {
@@ -166,7 +167,7 @@ pub async fn update_password(store: Store, claims: Claims, user_update: AuthInfo
         email: user_update.email,
         password: hash_password
     };
-    match UserMac::update_password(store, user).await {
+    match UserMac::update_password(&store, user).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -180,10 +181,10 @@ pub async fn update_password(store: Store, claims: Claims, user_update: AuthInfo
 }
 
 #[instrument(level = "info")]
-pub async fn set_admin_role(store: Store, claims: Claims, user: UserInfo)
+pub async fn set_admin_role(store: Arc<dyn StoreMethods>, claims: Claims, user: UserInfo)
                                         -> Result<impl warp::Reply, warp::Rejection>
 {
-    match UserMac::set_role(store, user, RoleId(ADMIN_ROLE_ID)).await {
+    match UserMac::set_role(&store, user, RoleId(ADMIN_ROLE_ID)).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -198,10 +199,10 @@ pub async fn set_admin_role(store: Store, claims: Claims, user: UserInfo)
 }
 
 #[instrument(level = "info")]
-pub async fn set_hr_role(store: Store, claims: Claims, user: UserInfo)
+pub async fn set_hr_role(store: Arc<dyn StoreMethods>, claims: Claims, user: UserInfo)
                             -> Result<impl warp::Reply, warp::Rejection>
 {
-    match UserMac::set_role(store, user, RoleId(HR_ROLE_ID)).await {
+    match UserMac::set_role(&store, user, RoleId(HR_ROLE_ID)).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -215,13 +216,13 @@ pub async fn set_hr_role(store: Store, claims: Claims, user: UserInfo)
 }
 
 #[instrument(level = "info")]
-pub async fn delete(store: Store, claims: Claims, user_delete: UserInfo)
+pub async fn delete(store: Arc<dyn StoreMethods>, claims: Claims, user_delete: UserInfo)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     if claims.id != user_delete.id {
         return Err(warp::reject())
     };
-    match UserMac::delete(store, user_delete.id).await {
+    match UserMac::delete(&store, user_delete.id).await {
         Ok(_) =>
             {
                 let payload = PayloadNoData {
