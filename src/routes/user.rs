@@ -1,11 +1,13 @@
+use std::sync::Arc;
 use warp::{Filter};
 use crate::controllers::user::{get_user_by_id, get_list_users, register, login, update_user, delete, update_password, set_admin_role, set_hr_role};
 use crate::middleware::authen::auth;
 use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, USER_ROLE_ID};
-use crate::models::store::Store;
+use crate::models::store::{Store, StoreMethods};
 
 
-pub fn user_route(base_path: &'static str, store: Store)
+// pub fn user_route(base_path: &'static str, store: Store)
+pub fn user_route(base_path: &'static str, store: Arc<dyn StoreMethods>)
                  -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let user_path = warp::path(base_path)
                                                             .and(warp::path("v1"));

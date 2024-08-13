@@ -1,9 +1,9 @@
+use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use handle_errors::Error;
 use crate::models::company::CompanyId;
 use crate::models::role::RoleId;
-use crate::models::store_impl_user::UserStoreMethods;
-use super::store::Store;
+use crate::models::store::{Store, StoreMethods};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct User {
@@ -39,25 +39,25 @@ pub struct AuthInfo {
 pub struct UserMac;
 
 pub trait UserActions {
-    async fn create(store: Store, new_user: AuthInfo)
+    async fn create(store: &Arc<dyn StoreMethods>, new_user: AuthInfo)
                     -> Result<UserInfo, Error>;
-    async fn get_by_email(store: Store, user_email: &String)
+    async fn get_by_email(store: &Arc<dyn StoreMethods>, user_email: &String)
                  -> Result<User, Error>;
-    async fn get_by_id(store: Store, user_id: UserId)
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, user_id: UserId)
                           -> Result<UserInfo, Error>;
-    async fn list(store: Store, limit: Option<i32>, offset: i32)
+    async fn list(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32)
                   -> Result<Vec<UserInfo>, Error>;
-    async fn update_user(store: Store, user_update: UserInfo)
+    async fn update_user(store: &Arc<dyn StoreMethods>, user_update: UserInfo)
                          -> Result<UserInfo, Error>;
-    async fn update_password(store: Store, user_update: AuthInfo)
+    async fn update_password(store: &Arc<dyn StoreMethods>, user_update: AuthInfo)
                              -> Result<UserInfo, Error>;
-    async fn set_role(store: Store, user_info: UserInfo, role_id: RoleId)
+    async fn set_role(store: &Arc<dyn StoreMethods>, user_info: UserInfo, role_id: RoleId)
                        -> Result<UserInfo, Error>;
-    async fn delete(store: Store, user_id: UserId)
+    async fn delete(store: &Arc<dyn StoreMethods>, user_id: UserId)
                     -> Result<bool, Error>;
 }
 impl UserActions for UserMac {
-    async fn create(store: Store, new_user: AuthInfo)
+    async fn create(store: &Arc<dyn StoreMethods>, new_user: AuthInfo)
         -> Result<UserInfo, Error>
     {
         match store.create_user(new_user).await {
@@ -69,7 +69,7 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn get_by_email(store: Store, user_email: &String)
+    async fn get_by_email(store: &Arc<dyn StoreMethods>, user_email: &String)
                         -> Result<User, Error>
     {
         match store.get_user_by_email(user_email).await {
@@ -81,7 +81,7 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn get_by_id(store: Store, user_id: UserId)
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, user_id: UserId)
                        -> Result<UserInfo, Error>
     {
         match store.get_user_by_id(user_id).await {
@@ -93,7 +93,7 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn list(store: Store, limit: Option<i32>, offset: i32)
+    async fn list(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32)
                      -> Result<Vec<UserInfo>, Error>
     {
         match store.get_list_user(limit, offset).await {
@@ -105,7 +105,7 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn update_user(store: Store, user_update: UserInfo)
+    async fn update_user(store: &Arc<dyn StoreMethods>, user_update: UserInfo)
                       -> Result<UserInfo, Error>
     {
         match store.update_user(user_update).await {
@@ -117,7 +117,7 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn update_password(store: Store, user_update: AuthInfo)
+    async fn update_password(store: &Arc<dyn StoreMethods>, user_update: AuthInfo)
                              -> Result<UserInfo, Error>
     {
         match store.update_password(user_update).await {
@@ -129,7 +129,7 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn set_role(store: Store, user_info: UserInfo, role_id: RoleId)
+    async fn set_role(store: &Arc<dyn StoreMethods>, user_info: UserInfo, role_id: RoleId)
                                  -> Result<UserInfo, Error>
     {
         match store.set_role(user_info, role_id).await {
@@ -141,7 +141,7 @@ impl UserActions for UserMac {
         }
     }
 
-    async fn delete(store: Store, user_id: UserId)
+    async fn delete(store: &Arc<dyn StoreMethods>, user_id: UserId)
                            -> Result<bool, Error>
     {
         match store.delete_user_by_id(user_id).await {

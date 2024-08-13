@@ -1,12 +1,8 @@
-use std::process::Command;
-use std::io::{self, Write};
 use crate::config::config::{Config};
-use crate::models::store::{Store, StoreActionBasic};
 use crate::models::user::{AuthInfo, UserId, UserInfo};
 use crate::{oneshot, setup_store};
-
 use futures_util::future::FutureExt;
-use crate::middleware::convert_to_json::{Data, PayloadForLogin};
+use crate::middleware::convert_to_json::{PayloadForLogin};
 use crate::models::company::CompanyId;
 use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, RoleId, USER_ROLE_ID};
 

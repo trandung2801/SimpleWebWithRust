@@ -1,8 +1,10 @@
+use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use handle_errors::Error;
 use crate::models::job::JobId;
 use crate::models::resume::ResumeId;
-use crate::models::store::{MapResumeJobMethods, Store};
+use crate::models::store::{Store, StoreMethods};
+
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct MapResumeJob {
@@ -23,12 +25,12 @@ pub struct MapResumeJobId(pub i32);
 
 pub struct MapResumeJobMac;
 pub trait MapResumeJobActions{
-    async fn create(store: Store, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>;
-    async fn list_resume_by_job(store: Store, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>;
+    async fn create(store: &Arc<dyn StoreMethods>, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>;
+    async fn list_resume_by_job(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>;
 }
 
 impl MapResumeJobActions for MapResumeJobMac {
-    async fn create(store: Store, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>
+    async fn create(store: &Arc<dyn StoreMethods>, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>
     {
         match store.create_map_job_resume(new_map_resume_job).await
         {
@@ -39,7 +41,7 @@ impl MapResumeJobActions for MapResumeJobMac {
             }
         }
     }
-    async fn list_resume_by_job(store: Store, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>
+    async fn list_resume_by_job(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>
     {
         match store.get_list_resume_by_job_id(limit, offset, job_id).await
         {

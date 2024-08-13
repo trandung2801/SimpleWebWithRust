@@ -1,8 +1,8 @@
+use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use handle_errors::Error;
 use crate::models::company::CompanyId;
-use crate::models::store::Store;
-use crate::models::store_impl_job::JobStoreMethods;
+use crate::models::store::{Store, StoreMethods};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Job {
@@ -33,20 +33,20 @@ pub struct NewJob {
 pub struct JobMac;
 
 pub trait JobActions {
-    async fn create(store: Store, new_job: NewJob)
+    async fn create(store: &Arc<dyn StoreMethods>, new_job: NewJob)
                     -> Result<Job, Error>;
-    async fn get_by_id(store: Store, job_id: JobId)
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, job_id: JobId)
                        -> Result<Job, Error>;
-    async fn list(store: Store, limit: Option<i32>, offset: i32)
+    async fn list(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32)
                   -> Result<Vec<Job>, Error>;
-    async fn update(store: Store, job: Job)
+    async fn update(store: &Arc<dyn StoreMethods>, job: Job)
                     -> Result<Job, Error>;
-    async fn delete(store: Store, job_id: JobId)
+    async fn delete(store: &Arc<dyn StoreMethods>, job_id: JobId)
                     -> Result<bool, Error>;
 }
 
 impl JobActions for JobMac {
-    async fn create(store: Store, new_job: NewJob) -> Result<Job, Error>
+    async fn create(store: &Arc<dyn StoreMethods>, new_job: NewJob) -> Result<Job, Error>
     {
         match store.create_job(new_job).await {
             Ok(job) => Ok(job),
@@ -56,7 +56,7 @@ impl JobActions for JobMac {
             }
         }
     }
-    async fn get_by_id(store: Store, job_id: JobId) -> Result<Job, Error>
+    async fn get_by_id(store: &Arc<dyn StoreMethods>, job_id: JobId) -> Result<Job, Error>
     {
         match store.get_job_by_id(job_id).await {
             Ok(job) => Ok(job),
@@ -66,7 +66,7 @@ impl JobActions for JobMac {
             }
         }
     }
-    async fn list(store: Store, limit: Option<i32>, offset: i32) -> Result<Vec<Job>, Error>
+    async fn list(store: &Arc<dyn StoreMethods>, limit: Option<i32>, offset: i32) -> Result<Vec<Job>, Error>
     {
         match store.get_list_job(limit, offset).await {
             Ok(job_list) => Ok(job_list),
@@ -76,7 +76,7 @@ impl JobActions for JobMac {
             }
         }
     }
-    async fn update(store: Store, job: Job) -> Result<Job, Error> {
+    async fn update(store: &Arc<dyn StoreMethods>, job: Job) -> Result<Job, Error> {
         match store.update_job(job).await {
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
@@ -85,7 +85,7 @@ impl JobActions for JobMac {
             Ok(job) => Ok(job),
         }
     }
-    async fn delete(store: Store, job_id: JobId) -> Result<bool, Error> {
+    async fn delete(store: &Arc<dyn StoreMethods>, job_id: JobId) -> Result<bool, Error> {
         match store.delete_job(job_id).await {
             Ok(is_delete) => Ok(is_delete),
             Err(e) => {

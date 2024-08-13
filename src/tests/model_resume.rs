@@ -2,7 +2,7 @@ use crate::config::config::Config;
 use crate::models::company::{CompanyId, CompanyMac};
 use crate::models::job::JobId;
 use crate::models::resume::{NewResume, Resume, ResumeMac, ResumeActions, ResumeId};
-use crate::models::store::{Store, StoreActionBasic};
+use crate::models::store::{Store, StoreMethods};
 use crate::models::user::UserId;
 
 #[tokio::test]
@@ -18,7 +18,7 @@ async fn resume_test() -> Result<(), handle_errors::Error>
         config_env.postgres.db_port,
         config_env.postgres.db_name
     );
-    let store = <Store as StoreActionBasic>::new(&db_url).await;
+    let store = Store::new(&db_url).await;
 
     print!("Running create new resume ...");
     let new_resume = NewResume{

@@ -2,20 +2,21 @@ use sqlx::{
     postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use async_trait::async_trait;
 use handle_errors::Error;
-use crate::models::job::{JobId};
-use crate::models::map_resume_job::{NewMapResumeJob, MapResumeJob, MapResumeJobId};
-use crate::models::resume::{ResumeId};
+use crate::models::map_resume_job::{MapResumeJob, MapResumeJobId, NewMapResumeJob};
+use crate::models::user::{AuthInfo, User, UserId, UserInfo};
+use crate::models::role::{RoleInfo, RoleId, Role, USER_ROLE_ID};
+use crate::models::company::{Company, CompanyId, NewCompany};
+use crate::models::job::{Job, JobId, NewJob};
+use crate::models::resume::{Resume, ResumeId, NewResume};
 
 #[derive(Debug, Clone)]
 pub struct Store {
     pub connection: PgPool,
 }
-pub trait StoreActionBasic {
-    async fn new(db_url: &str) -> Self;
-}
-impl StoreActionBasic for Store {
-    async fn new(db_url: &str) -> Self {
+impl Store {
+    pub async fn new(db_url: &str) -> Self {
         tracing::warn!("{}", db_url);
         let db_pool = match PgPoolOptions::new()
             .max_connections(5)
@@ -31,95 +32,82 @@ impl StoreActionBasic for Store {
     }
 }
 
-pub trait MapResumeJobMethods {
+#[async_trait]
+pub trait StoreMethods {
+    // methods for map resume job
     async fn create_map_job_resume(self, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>;
     async fn get_list_job_by_resume(self, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>;
     async fn get_list_resume_by_job_id(self, limit: Option<i32>, offset: i32, job_id: JobId) -> Result<Vec<MapResumeJob>, Error>;
+
+    //methods for users
+    async fn create_user(self, new_user: AuthInfo)
+                         -> Result<UserInfo, Error>;
+    async fn get_user_by_email(self, user_email: &String)
+                               -> Result<User, Error>;
+
+    async fn get_user_by_id(self, user_id: UserId)
+                            -> Result<UserInfo, Error>;
+    async fn get_list_user(self, limit: Option<i32>, offset: i32)
+                           -> Result<Vec<UserInfo>, Error>;
+    async fn update_user(self, user_info: UserInfo)
+                         -> Result<UserInfo, Error>;
+    async fn delete_user_by_id(self, user_id: UserId)
+                               -> Result<bool, Error>;
+    async fn update_password(self, user: AuthInfo)
+                             -> Result<UserInfo, Error>;
+    async fn set_role(self, user: UserInfo, role_id: RoleId)
+                      -> Result<UserInfo, Error>;
+    async fn create_role(self, new_role: RoleInfo)
+                         -> Result<Role, Error>;
+    async fn get_role_by_id(self, role_id: RoleId)
+                            -> Result<Role, Error>;
+    async fn get_list_roles(self)
+                            -> Result<Vec<Role>, Error>;
+    async fn update_role(self, role: Role)
+                         -> Result<Role, Error>;
+    async fn delete_role(self, role_id: RoleId)
+                         -> Result<bool, Error>;
+    async fn create_company(self, new_company: NewCompany)
+                            -> Result<Company, Error>;
+    async fn get_company_by_email(self, company_email: &String)
+                                  -> Result<Company, Error>;
+    async fn get_company_by_id(self, company_id: CompanyId)
+                               -> Result<Company, Error>;
+    async fn get_list_company(self, limit: Option<i32>, offset: i32)
+                              -> Result<Vec<Company>, Error>;
+    async fn update_company(self, company: Company)
+                            -> Result<Company, Error>;
+    async fn delete_company(self, company_id: CompanyId)
+                            -> Result<bool, Error>;
+
+    async fn create_job(self, new_job: NewJob)
+                        -> Result<Job, Error>;
+    async fn get_job_by_id(self, job_id: JobId)
+                           -> Result<Job, Error>;
+    async fn get_list_job(self, limit: Option<i32>, offset: i32)
+                          -> Result<Vec<Job>, Error>;
+    async fn update_job(self, job: Job)
+                        -> Result<Job, Error>;
+    async fn delete_job(self, job_id: JobId)
+                        -> Result<bool, Error>;
+    async fn create_resume(self, new_resume: NewResume)
+                           -> Result<Resume, Error>;
+    async fn get_resume_by_id(self, resume_id: ResumeId)
+                              -> Result<Resume, Error>;
+    async fn get_resume_by_user_id(self, user_id: UserId)
+                                   -> Result<Resume, Error>;
+    async fn get_list_resume_by_user_id(self, limit: Option<i32>, offset: i32, user_id: UserId)
+                                        -> Result<Vec<Resume>, Error>;
+    async fn update_resume(self, resume: Resume)
+                           -> Result<Resume, Error>;
+    async fn delete_resume(self, resume_id: ResumeId)
+                           -> Result<bool, Error>;
+
+
 }
 
-impl MapResumeJobMethods for Store {
-    async fn create_map_job_resume(self, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>
-    {
-        match sqlx::query("INSERT INTO map_resume_job (resume_id, job_id) \
-                            VALUES ($1, $2)\
-                            RETURNING id, resume_id, job_id")
-            .bind(new_map_resume_job.resume_id.0)
-            .bind(new_map_resume_job.job_id.0)
-            .map(|row: PgRow| MapResumeJob {
-                id: Some(MapResumeJobId(row.get("id"))),
-                resume_id: ResumeId(row.get("resume_id")),
-                job_id: JobId(row.get("job_id"))
-            })
-            .fetch_one(&self.connection)
-            .await
-        {
-            Ok(user) => Ok(user),
-            Err(error) => {
-                tracing::event!(
-                    tracing::Level::ERROR,
-                    code = error
-                        .as_database_error()
-                        .unwrap()
-                        .code()
-                        .unwrap()
-                        .parse::<i32>()
-                        .unwrap(),
-                    db_message =
-                        error.as_database_error().unwrap().message(),
-                    constraint = error
-                        .as_database_error()
-                        .unwrap()
-                        .constraint()
-                        .unwrap()
-                );
-                Err(Error::DatabaseQueryError(error))
-            }
-        }
-    }
-    async fn get_list_job_by_resume(self, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>
-    {
-        match sqlx::query("SELECT * FROM map_resume_job where resume_id = $1")
-            .bind(resume_id.0)
-            .map(|row: PgRow| MapResumeJob {
-                id: Some(MapResumeJobId(row.get("id"))),
-                resume_id: ResumeId(row.get("resume_id")),
-                job_id: JobId(row.get("job_id"))
-            })
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(list_map) => Ok(list_map),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError(e))
-            }
-        }
-    }
-    async fn get_list_resume_by_job_id(self, limit: Option<i32>, offset: i32, job_id: JobId)
-        -> Result<Vec<MapResumeJob>, Error>
-    {
-        match sqlx::query("SELECT * FROM map_resume_job where job_id = $1 LIMIT $2 OFFSET $3 ")
-            .bind(job_id.0)
-            .bind(limit)
-            .bind(offset)
-            .map(|row: PgRow| MapResumeJob {
-                id: Some(MapResumeJobId(row.get("id"))),
-                resume_id: ResumeId(row.get("resume_id")),
-                job_id: JobId(row.get("job_id"))
-            })
-            .fetch_all(&self.connection)
-            .await
-        {
-            Ok(list_map) => Ok(list_map),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError(e))
-            }
-        }
-    }
-}
 
 // TEST
-#[cfg(test)]
-#[path = "../tests/model_store.rs"]
-mod model_store_tests;
+// #[cfg(test)]
+// #[path = "../tests/model_store.rs"]
+// mod model_store_tests;

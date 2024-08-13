@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{event, instrument, Level};
 use warp::http::StatusCode;
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
@@ -6,11 +7,11 @@ use crate::middleware::jwt::Claims;
 use crate::models::job::JobId;
 use crate::models::pagination::{Pagination, PaginationForJob, PaginationMethods};
 use crate::models::resume::{NewResume, ResumeMac, ResumeActions, ResumeId, Resume};
-use crate::models::store::Store;
+use crate::models::store::{Store, StoreMethods};
 use crate::models::user::{UserActions};
 
 #[instrument(level = "info")]
-pub async fn create_resume(store: Store, claims: Claims, new_resume: NewResume)
+pub async fn create_resume(store: Arc<dyn StoreMethods>, claims: Claims, new_resume: NewResume)
                            -> Result<impl warp::Reply, warp::Rejection>
 {
     let resume = NewResume {
@@ -18,7 +19,7 @@ pub async fn create_resume(store: Store, claims: Claims, new_resume: NewResume)
         email: new_resume.email,
         url: new_resume.url
     };
-    match ResumeMac::create(store, resume).await {
+    match ResumeMac::create(&store, resume).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -31,10 +32,10 @@ pub async fn create_resume(store: Store, claims: Claims, new_resume: NewResume)
 }
 
 #[instrument(level = "info")]
-pub async fn get_resume(store: Store, claims: Claims, resume_id: i32)
+pub async fn get_resume(store: Arc<dyn StoreMethods>, claims: Claims, resume_id: i32)
     -> Result<impl warp::Reply, warp::Rejection>
 {
-    match ResumeMac::get_by_id(store, ResumeId(resume_id)).await {
+    match ResumeMac::get_by_id(&store, ResumeId(resume_id)).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -48,7 +49,7 @@ pub async fn get_resume(store: Store, claims: Claims, resume_id: i32)
 }
 
 #[instrument(level = "info")]
-pub async fn get_list_resume_by_user_id(store: Store, claims: Claims, params: HashMap<String, String>)
+pub async fn get_list_resume_by_user_id(store: Arc<dyn StoreMethods>, claims: Claims, params: HashMap<String, String>)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     let mut pagination = Pagination::default();
@@ -57,7 +58,7 @@ pub async fn get_list_resume_by_user_id(store: Store, claims: Claims, params: Ha
         event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
-    match ResumeMac::list_by_user_id(store, pagination.limit, pagination.offset, claims.id).await {
+    match ResumeMac::list_by_user_id(&store, pagination.limit, pagination.offset, claims.id).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -71,7 +72,7 @@ pub async fn get_list_resume_by_user_id(store: Store, claims: Claims, params: Ha
 }
 
 #[instrument(level = "info")]
-pub async fn get_list_resume_by_job(store: Store, params: HashMap<String, String>)
+pub async fn get_list_resume_by_job(store: Arc<dyn StoreMethods>, params: HashMap<String, String>)
                                         -> Result<impl warp::Reply, warp::Rejection>
 {
 
@@ -82,7 +83,7 @@ pub async fn get_list_resume_by_job(store: Store, params: HashMap<String, String
         pagination = <Pagination as PaginationMethods>::extract_pagination_job(params)?;
     }
 
-    match ResumeMac::list_by_job_id(store, pagination.limit, pagination.offset, JobId(pagination.job_id)).await {
+    match ResumeMac::list_by_job_id(&store, pagination.limit, pagination.offset, JobId(pagination.job_id)).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -96,7 +97,7 @@ pub async fn get_list_resume_by_job(store: Store, params: HashMap<String, String
 }
 
 #[instrument(level = "info")]
-pub async fn update_resume(store: Store, claims: Claims, resume: Resume)
+pub async fn update_resume(store: Arc<dyn StoreMethods>, claims: Claims, resume: Resume)
     -> Result<impl warp::Reply, warp::Rejection>
 {
     if claims.id != resume.clone().user_id {
@@ -105,7 +106,7 @@ pub async fn update_resume(store: Store, claims: Claims, resume: Resume)
         };
         return Ok(warp::reply::with_status(warp::reply::json(&payload), StatusCode::BAD_REQUEST))
     }
-    match ResumeMac::update(store, resume).await {
+    match ResumeMac::update(&store, resume).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -119,10 +120,10 @@ pub async fn update_resume(store: Store, claims: Claims, resume: Resume)
 }
 
 #[instrument(level = "info")]
-pub async fn delete_resume(store: Store, claims: Claims, resume: Resume)
+pub async fn delete_resume(store: Arc<dyn StoreMethods>, claims: Claims, resume: Resume)
                             -> Result<impl warp::Reply, warp::Rejection>
 {
-    match ResumeMac::delete(store, resume.id.unwrap()).await {
+    match ResumeMac::delete(&store, resume.id.unwrap()).await {
         Ok(_) =>
             {
                 let payload = PayloadNoData {

@@ -1,18 +1,19 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use reqwest::StatusCode;
 use tracing::{event, instrument, Level};
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::middleware::jwt::Claims;
 use crate::models::job::{JobMac, NewJob, JobActions, JobId, Job};
-use crate::models::store::Store;
+use crate::models::store::{Store, StoreMethods};
 use crate::models::user::{UserMac, UserActions};
 use crate::models::pagination::{Pagination, PaginationMethods};
 
 #[instrument(level = "info")]
-pub async fn create_job(store: Store, claims: Claims, new_job: NewJob)
+pub async fn create_job(store: Arc<dyn StoreMethods>, claims: Claims, new_job: NewJob)
                         -> Result<impl warp::Reply, warp::Rejection>
 {
-    match UserMac::get_by_id(store.clone(), claims.id).await {
+    match UserMac::get_by_id(&store, claims.id).await {
         Ok(res) => {
             if res.company_id != new_job.clone().company_id {
                 let payload = PayloadNoData {
@@ -33,7 +34,7 @@ pub async fn create_job(store: Store, claims: Claims, new_job: NewJob)
         job_level: new_job.job_level,
         description: new_job.description
     };
-    match JobMac::create(store, job).await {
+    match JobMac::create(&store, job).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -47,10 +48,10 @@ pub async fn create_job(store: Store, claims: Claims, new_job: NewJob)
 }
 
 #[instrument(level = "info")]
-pub async fn get_job(store: Store, job_id: i32)
+pub async fn get_job(store: Arc<dyn StoreMethods>, job_id: i32)
                         -> Result<impl warp::Reply, warp::Rejection>
 {
-    match JobMac::get_by_id(store, JobId(job_id)).await {
+    match JobMac::get_by_id(&store, JobId(job_id)).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -64,7 +65,7 @@ pub async fn get_job(store: Store, job_id: i32)
 }
 
 #[instrument(level = "info")]
-pub async fn get_list_job(store: Store, params: HashMap<String, String>)
+pub async fn get_list_job(store: Arc<dyn StoreMethods>, params: HashMap<String, String>)
                                         -> Result<impl warp::Reply, warp::Rejection>
 {
     let mut pagination = Pagination::default();
@@ -73,7 +74,7 @@ pub async fn get_list_job(store: Store, params: HashMap<String, String>)
         event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
-    match JobMac::list(store, pagination.limit, pagination.offset).await {
+    match JobMac::list(&store, pagination.limit, pagination.offset).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -87,10 +88,10 @@ pub async fn get_list_job(store: Store, params: HashMap<String, String>)
 }
 
 #[instrument(level = "info")]
-pub async fn update_job(store: Store, claims: Claims, job: Job)
+pub async fn update_job(store: Arc<dyn StoreMethods>, claims: Claims, job: Job)
                            -> Result<impl warp::Reply, warp::Rejection>
 {
-    match UserMac::get_by_id(store.clone(), claims.id).await {
+    match UserMac::get_by_id(&store, claims.id).await {
         Ok(res) => {
             if res.company_id != job.clone().company_id {
                 let payload = PayloadNoData {
@@ -101,7 +102,7 @@ pub async fn update_job(store: Store, claims: Claims, job: Job)
         }
         _ => ()
     }
-    match JobMac::update(store, job).await {
+    match JobMac::update(&store, job).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -115,10 +116,10 @@ pub async fn update_job(store: Store, claims: Claims, job: Job)
 }
 
 #[instrument(level = "info")]
-pub async fn delete_job(store: Store, claims: Claims, job: Job)
+pub async fn delete_job(store: Arc<dyn StoreMethods>, claims: Claims, job: Job)
                            -> Result<impl warp::Reply, warp::Rejection>
 {
-    match UserMac::get_by_id(store.clone(), claims.id).await {
+    match UserMac::get_by_id(&store, claims.id).await {
         Ok(res) => {
             if res.company_id != job.clone().company_id {
                 let payload = PayloadNoData {
@@ -129,7 +130,7 @@ pub async fn delete_job(store: Store, claims: Claims, job: Job)
         }
         _ => ()
     }
-    match JobMac::delete(store, job.id.unwrap()).await {
+    match JobMac::delete(&store, job.id.unwrap()).await {
         Ok(_) =>
             {
                 let payload = PayloadNoData {

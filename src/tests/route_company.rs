@@ -1,6 +1,5 @@
 use futures_util::FutureExt;
 use crate::config::config::{Config};
-use crate::models::store::{StoreActionBasic};
 use crate::{oneshot, setup_store};
 use crate::middleware::convert_to_json::PayloadForLogin;
 use crate::models::company::{Company, CompanyId, NewCompany};
