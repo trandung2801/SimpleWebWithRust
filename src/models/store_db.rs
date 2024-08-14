@@ -1,20 +1,41 @@
-use async_trait::async_trait;
 use sqlx::{
     postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use async_trait::async_trait;
 use handle_errors::Error;
-use crate::models::store::{Store, StoreMethods};
 use crate::models::map_resume_job::{MapResumeJob, MapResumeJobId, NewMapResumeJob};
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
 use crate::models::role::{RoleInfo, RoleId, Role, USER_ROLE_ID};
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::job::{Job, JobId, NewJob};
 use crate::models::resume::{Resume, ResumeId, NewResume};
+use crate::models::store_trait::StoreMethods;
+
+#[derive(Debug, Clone)]
+pub struct Store {
+    pub connection: PgPool,
+}
+impl Store {
+    pub async fn new(db_url: &str) -> Self {
+        tracing::warn!("{}", db_url);
+        let db_pool = match PgPoolOptions::new()
+            .max_connections(5)
+            .connect(db_url)
+            .await {
+            Ok(pool) => pool,
+            Err(e) => panic!("Couldn't establish DB connection: {}", e),
+        };
+
+        Store {
+            connection: db_pool,
+        }
+    }
+}
 
 #[async_trait]
 impl StoreMethods for Store {
-    async fn create_map_job_resume(self, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>
+    async fn create_map_job_resume(&self, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>
     {
         match sqlx::query("INSERT INTO map_resume_job (resume_id, job_id) \
                             VALUES ($1, $2)\
@@ -52,7 +73,7 @@ impl StoreMethods for Store {
             }
         }
     }
-    async fn get_list_job_by_resume(self, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>
+    async fn get_list_job_by_resume(&self, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>
     {
         match sqlx::query("SELECT * FROM map_resume_job where resume_id = $1")
             .bind(resume_id.0)
@@ -71,7 +92,7 @@ impl StoreMethods for Store {
             }
         }
     }
-    async fn get_list_resume_by_job_id(self, limit: Option<i32>, offset: i32, job_id: JobId)
+    async fn get_list_resume_by_job_id(&self, limit: Option<i32>, offset: i32, job_id: JobId)
                                        -> Result<Vec<MapResumeJob>, Error>
     {
         match sqlx::query("SELECT * FROM map_resume_job where job_id = $1 LIMIT $2 OFFSET $3 ")
@@ -93,20 +114,23 @@ impl StoreMethods for Store {
             }
         }
     }
-    async fn create_user(self, new_user: AuthInfo)
-                             -> Result<UserInfo, Error>
+
+    //user
+    async fn create_user(&self, new_user: AuthInfo)
+                         -> Result<User, Error>
     {
         match sqlx::query("INSERT INTO users (email, password, company_id, role_id, is_delete) \
                             VALUES ($1, $2, $3, $4, $5) \
-                            RETURNING id, email, company_id, role_id, is_delete")
+                            RETURNING id, email, password, company_id, role_id, is_delete")
             .bind(new_user.email)
             .bind(new_user.password)
             .bind(0)
             .bind(USER_ROLE_ID)
             .bind(false)
-            .map(|row: PgRow| UserInfo {
-                id: UserId(row.get("id")),
+            .map(|row: PgRow| User {
+                id: Some(UserId(row.get("id"))),
                 email:row.get("email"),
+                password: row.get("password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete")
@@ -137,8 +161,8 @@ impl StoreMethods for Store {
             }
         }
     }
-    async fn get_user_by_email(self, user_email: &String)
-                                   -> Result<User, Error>
+    async fn get_user_by_email(&self, user_email: &String)
+                               -> Result<User, Error>
     {
         match sqlx::query("SELECT * FROM USERS WHERE email = $1")
             .bind(user_email)
@@ -162,14 +186,15 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_user_by_id(self, user_id: UserId)
-                                -> Result<UserInfo, Error>
+    async fn get_user_by_id(&self, user_id: UserId)
+                            -> Result<User, Error>
     {
         match sqlx::query("SELECT * FROM USERS WHERE id = $1")
             .bind(user_id.0)
-            .map(|row: PgRow| UserInfo {
-                id: UserId(row.get("id")),
+            .map(|row: PgRow| User {
+                id: Some(UserId(row.get("id"))),
                 email:row.get("email"),
+                password: row.get("password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete")
@@ -185,15 +210,16 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_list_user(self, limit: Option<i32>, offset: i32)
-                               -> Result<Vec<UserInfo>, Error>
+    async fn get_list_user(&self, limit: Option<i32>, offset: i32)
+                           -> Result<Vec<User>, Error>
     {
         match sqlx::query("SELECT * FROM USERS LIMIT $1 OFFSET $2")
             .bind(limit)
             .bind(offset)
-            .map(|row: PgRow| UserInfo {
-                id: UserId(row.get("id")),
+            .map(|row: PgRow| User {
+                id: Some(UserId(row.get("id"))),
                 email:row.get("email"),
+                password: row.get("password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete")
@@ -209,18 +235,19 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn update_user(self, user_info: UserInfo)
-                             -> Result<UserInfo, Error>
+    async fn update_user(&self, user_info: UserInfo)
+                         -> Result<User, Error>
     {
         match sqlx::query(
             "Update users SET company_id = $1 \
                 where email = $2 \
-                RETURNING id, email, company_id, role_id, is_delete")
+                RETURNING id, email, password, company_id, role_id, is_delete")
             .bind(user_info.company_id.0)
             .bind(user_info.email)
-            .map(|row: PgRow| UserInfo {
-                id: UserId(row.get("id")),
+            .map(|row: PgRow| User {
+                id: Some(UserId(row.get("id"))),
                 email:row.get("email"),
+                password: row.get("password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete")
@@ -236,18 +263,19 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn update_password(self, user: AuthInfo)
-                                 -> Result<UserInfo, Error>
+    async fn update_password(&self, user: AuthInfo)
+                             -> Result<User, Error>
     {
         match sqlx::query(
             "Update users SET password = $1 \
                 where email = $2 \
-                RETURNING id, email, company_id, role_id, is_delete")
+                RETURNING id, email, password, company_id, role_id, is_delete")
             .bind(user.password)
             .bind(user.email)
-            .map(|row: PgRow| UserInfo {
-                id: UserId(row.get("id")),
+            .map(|row: PgRow| User {
+                id: Some(UserId(row.get("id"))),
                 email:row.get("email"),
+                password: row.get("password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete")
@@ -263,18 +291,19 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn set_role(self, user: UserInfo, role_id: RoleId)
-                                -> Result<UserInfo, Error>
+    async fn set_role(&self, user: UserInfo, role_id: RoleId)
+                      -> Result<User, Error>
     {
         match sqlx::query(
             "Update users SET role_id = $1 \
                 where email = $2 \
-                RETURNING id, email, company_id, role_id, is_delete")
+                RETURNING id, email, password, company_id, role_id, is_delete")
             .bind(role_id.0)
             .bind(user.email)
-            .map(|row: PgRow| UserInfo {
-                id: UserId(row.get("id")),
+            .map(|row: PgRow| User {
+                id: Some(UserId(row.get("id"))),
                 email:row.get("email"),
+                password: row.get("password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete")
@@ -290,8 +319,8 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn delete_user_by_id(self, user_id: UserId)
-                                  -> Result<bool, Error>
+    async fn delete_user_by_id(&self, user_id: UserId)
+                               -> Result<bool, Error>
     {
         match sqlx::query("Update users set is_delete = $1 where id = $2")
             .bind(true)
@@ -307,7 +336,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn create_role(self, new_role: RoleInfo)
+    async fn create_role(&self, new_role: RoleInfo)
                          -> Result<Role, Error>
     {
         match sqlx::query("INSERT INTO roles (role, is_delete) \
@@ -347,7 +376,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_role_by_id(self, role_id: RoleId)
+    async fn get_role_by_id(&self, role_id: RoleId)
                             -> Result<Role, Error>
     {
         match sqlx::query("SELECT * FROM roles WHERE id = $1")
@@ -368,7 +397,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_list_roles(self)
+    async fn get_list_roles(&self)
                             -> Result<Vec<Role>, Error>
     {
         match sqlx::query("SELECT * FROM ROLES")
@@ -388,7 +417,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn update_role(self, role: Role)
+    async fn update_role(&self, role: Role)
                          -> Result<Role, Error>
     {
         match sqlx::query(
@@ -413,7 +442,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn delete_role(self, role_id: RoleId)
+    async fn delete_role(&self, role_id: RoleId)
                          -> Result<bool, Error>
     {
         match sqlx::query("Update roles set is_delete = $1 where id = $2")
@@ -430,7 +459,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn create_company(self, new_company: NewCompany)
+    async fn create_company(&self, new_company: NewCompany)
                             -> Result<Company, Error>
     {
 
@@ -478,7 +507,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_company_by_email(self, company_email: &String)
+    async fn get_company_by_email(&self, company_email: &String)
                                   -> Result<Company, Error>
     {
         match sqlx::query("SELECT * FROM COMPANIES WHERE email = $1")
@@ -503,7 +532,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_company_by_id(self, company_id: CompanyId)
+    async fn get_company_by_id(&self, company_id: CompanyId)
                                -> Result<Company, Error>
     {
         match sqlx::query("SELECT * FROM COMPANIES WHERE id = $1")
@@ -528,7 +557,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_list_company(self, limit: Option<i32>, offset: i32)
+    async fn get_list_company(&self, limit: Option<i32>, offset: i32)
                               -> Result<Vec<Company>, Error>
     {
         match sqlx::query("SELECT * FROM COMPANIES LIMIT $1 OFFSET $2")
@@ -554,7 +583,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn update_company(self, company: Company)
+    async fn update_company(&self, company: Company)
                             -> Result<Company, Error>
     {
         match sqlx::query(
@@ -587,7 +616,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn delete_company(self, company_id: CompanyId)
+    async fn delete_company(&self, company_id: CompanyId)
                             -> Result<bool, Error>
     {
         match sqlx::query("Update companies set is_delete = $1 where id = $2")
@@ -604,7 +633,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn create_job(self, new_job: NewJob)
+    async fn create_job(&self, new_job: NewJob)
                         -> Result<Job, Error>
     {
         match sqlx::query("INSERT INTO jobs (job_name, company_id, location, quantity, \
@@ -658,7 +687,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_job_by_id(self, job_id: JobId)
+    async fn get_job_by_id(&self, job_id: JobId)
                            -> Result<Job, Error>
     {
         match sqlx::query("SELECT * FROM JOBS WHERE id = $1")
@@ -686,7 +715,7 @@ impl StoreMethods for Store {
     }
 
 
-    async fn get_list_job(self, limit: Option<i32>, offset: i32)
+    async fn get_list_job(&self, limit: Option<i32>, offset: i32)
                           -> Result<Vec<Job>, Error>
     {
         match sqlx::query("SELECT * FROM JOBS LIMIT $1 OFFSET $2")
@@ -714,7 +743,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn update_job(self, job: Job)
+    async fn update_job(&self, job: Job)
                         -> Result<Job, Error>
     {
         match sqlx::query(
@@ -754,7 +783,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn delete_job(self, job_id: JobId)
+    async fn delete_job(&self, job_id: JobId)
                         -> Result<bool, Error>
     {
         match sqlx::query("Update resumes set is_delete = $1 where id = $2")
@@ -771,7 +800,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn create_resume(self, new_resume: NewResume)
+    async fn create_resume(&self, new_resume: NewResume)
                            -> Result<Resume, Error>
     {
         match sqlx::query("INSERT INTO resumes (user_id, email, url, is_delete) \
@@ -815,7 +844,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_resume_by_id(self, resume_id: ResumeId)
+    async fn get_resume_by_id(&self, resume_id: ResumeId)
                               -> Result<Resume, Error>
     {
         match sqlx::query("SELECT * FROM RESUMES WHERE id = $1")
@@ -838,7 +867,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_resume_by_user_id(self, user_id: UserId)
+    async fn get_resume_by_user_id(&self, user_id: UserId)
                                    -> Result<Resume, Error>
     {
         match sqlx::query("SELECT * FROM RESUMES WHERE user_id = $1")
@@ -861,7 +890,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn get_list_resume_by_user_id(self, limit: Option<i32>, offset: i32, user_id: UserId)
+    async fn get_list_resume_by_user_id(&self, limit: Option<i32>, offset: i32, user_id: UserId)
                                         -> Result<Vec<Resume>, Error>
     {
         match sqlx::query("SELECT * FROM RESUMES WHERE user_id = $1 \
@@ -887,7 +916,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn update_resume(self, resume: Resume)
+    async fn update_resume(&self, resume: Resume)
                            -> Result<Resume, Error>
     {
         match sqlx::query(
@@ -914,7 +943,7 @@ impl StoreMethods for Store {
         }
     }
 
-    async fn delete_resume(self, resume_id: ResumeId)
+    async fn delete_resume(&self, resume_id: ResumeId)
                            -> Result<bool, Error>
     {
         match sqlx::query("Update resumes set is_delete = $1 where id = $2")

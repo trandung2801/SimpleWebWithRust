@@ -1,9 +1,4 @@
-use std::sync::Arc;
 use serde::{Deserialize, Serialize};
-use handle_errors::Error;
-use crate::models::store::{Store, StoreMethods};
-
-
 
 pub const ADMIN_ROLE_ID: i32 = 1;
 pub const USER_ROLE_ID: i32 = 2;
@@ -22,81 +17,4 @@ pub struct RoleId(pub i32);
 pub struct RoleInfo {
     pub role: String,
     pub is_delete: bool
-}
-
-pub struct RoleMac;
-
-pub trait RoleActions {
-    async fn create(store: &Arc<dyn StoreMethods>, role_info: RoleInfo)
-                    -> Result<Role, Error>;
-    async fn get_by_id(store: &Arc<dyn StoreMethods>, role_id: RoleId)
-                       -> Result<Role, Error>;
-    async fn list(store: &Arc<dyn StoreMethods>)
-                  -> Result<Vec<Role>, Error>;
-    async fn update(store: &Arc<dyn StoreMethods>, role: Role)
-                    -> Result<Role, Error>;
-    async fn delete(store: &Arc<dyn StoreMethods>, role_id: RoleId)
-                    -> Result<bool, Error>;
-}
-
-impl RoleActions for RoleMac {
-    async fn create(store: &Arc<dyn StoreMethods>, role_info: RoleInfo)
-                        -> Result<Role, Error>
-    {
-        match store.create_role(role_info).await {
-            Ok(role) => Ok(role),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(e)
-            }
-        }
-    }
-
-    async fn get_by_id(store: &Arc<dyn StoreMethods>, role_id: RoleId)
-                                -> Result<Role, Error>
-    {
-        match store.get_role_by_id(role_id).await {
-            Ok(role) => Ok(role),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(e)
-            }
-        }
-    }
-
-    async fn list(store: &Arc<dyn StoreMethods>)
-                      -> Result<Vec<Role>, Error>
-    {
-        match store.get_list_roles().await {
-            Ok(role_list) => Ok(role_list),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(e)
-            }
-        }
-    }
-
-    async fn update(store: &Arc<dyn StoreMethods>, role: Role)
-                        -> Result<Role, Error>
-    {
-        match store.update_role(role).await {
-            Ok(role) => Ok(role),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(e)
-            }
-        }
-    }
-
-    async fn delete(store: &Arc<dyn StoreMethods>, role_id: RoleId)
-                        -> Result<bool, Error>
-    {
-        match store.delete_role(role_id).await {
-            Ok(is_delete) => Ok(is_delete),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(e)
-            }
-        }
-    }
 }

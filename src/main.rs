@@ -6,7 +6,8 @@ use tracing::{instrument};
 use handle_errors::return_error;
 use routes::user::user_route;
 use crate::config::config::Config;
-use crate::models::store::{Store, StoreMethods};
+use crate::models::store_db::Store;
+use crate::models::store_trait::StoreMethods;
 use crate::routes::company::company_route;
 use crate::routes::job::job_route;
 use crate::routes::resume::resume_route;
@@ -40,7 +41,7 @@ async fn main() {
     );
 
     // let store: Arc<dyn StoreMethods> = Arc::new(Store::new(&url));
-    let store: Arc<dyn StoreMethods> = Arc::new(Store::new(&url));
+    let store: Arc<dyn StoreMethods + Send + Sync> = Arc::new(Store::new(&url).await);
 
 
     let cors = warp::cors()

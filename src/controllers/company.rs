@@ -1,21 +1,21 @@
 use std::collections::HashMap;
+use std::ffi::CStr;
 use std::sync::Arc;
 use warp::http::StatusCode;
 use crate::middleware::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::middleware::jwt::{Claims};
-use crate::models::company::{CompanyMac, CompanyActions, Company, CompanyId, NewCompany};
+use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::pagination::{Pagination, PaginationMethods};
-use crate::models::store::{Store, StoreMethods};
-use crate::models::user::{UserActions};
+use crate::models::store_trait::StoreMethods;
 use tracing::instrument;
 
 #[instrument(level = "info")]
-pub async fn create_company(store: Arc<dyn StoreMethods>, claims: Claims, new_company: NewCompany)
+pub async fn create_company(store: Arc<dyn StoreMethods + Send + Sync>, claims: Claims, new_company: NewCompany)
                             -> Result<impl warp::Reply, warp::Rejection>
 {
     //valid company,
     let new_email = new_company.email;
-    match CompanyMac::get_by_email(&store, &new_email).await {
+    match store.get_company_by_email(&new_email).await {
         Ok(res) => {
             let payload = PayloadNoData {
                 message: "Email company invalid".to_string(),
@@ -30,7 +30,7 @@ pub async fn create_company(store: Arc<dyn StoreMethods>, claims: Claims, new_co
         address: new_company.address,
         description: new_company.description,
     };
-    match CompanyMac::create(&store, company).await {
+    match store.create_company(company).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -44,10 +44,10 @@ pub async fn create_company(store: Arc<dyn StoreMethods>, claims: Claims, new_co
 }
 
 #[instrument(level = "info")]
-pub async fn get_company(store: Arc<dyn StoreMethods>, company_id: i32)
+pub async fn get_company(store: Arc<dyn StoreMethods + Send + Sync>, company_id: i32)
                                  -> Result<impl warp::Reply, warp::Rejection>
 {
-    match CompanyMac::get_by_id(&store, CompanyId(company_id)).await {
+    match store.get_company_by_id(CompanyId(company_id)).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -61,7 +61,7 @@ pub async fn get_company(store: Arc<dyn StoreMethods>, company_id: i32)
 }
 
 #[instrument(level = "info")]
-pub async fn get_list_company(store: Arc<dyn StoreMethods>, params: HashMap<String, String>)
+pub async fn get_list_company(store: Arc<dyn StoreMethods + Send + Sync>, params: HashMap<String, String>)
                                        -> Result<impl warp::Reply, warp::Rejection>
 {
     let mut pagination = Pagination::default();
@@ -69,7 +69,7 @@ pub async fn get_list_company(store: Arc<dyn StoreMethods>, params: HashMap<Stri
     if !params.is_empty() {
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
-    match CompanyMac::list(&store, pagination.limit, pagination.offset).await {
+    match store.get_list_company(pagination.limit, pagination.offset).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -83,11 +83,11 @@ pub async fn get_list_company(store: Arc<dyn StoreMethods>, params: HashMap<Stri
 }
 
 #[instrument(level = "info")]
-pub async fn update_company(store: Arc<dyn StoreMethods>, claims: Claims, company: Company)
+pub async fn update_company(store: Arc<dyn StoreMethods + Send + Sync>, claims: Claims, company: Company)
                                     -> Result<impl warp::Reply, warp::Rejection>
 {
     let email_update = company.email.clone();
-    match CompanyMac::get_by_email(&store, &email_update).await {
+    match store.get_company_by_email(&email_update).await {
         Ok(res) => {
             let payload = PayloadNoData {
                 message: "Email company invalid".to_string(),
@@ -96,7 +96,7 @@ pub async fn update_company(store: Arc<dyn StoreMethods>, claims: Claims, compan
         }
         _ => ()
     }
-    match CompanyMac::update(&store, company).await {
+    match store.update_company(company).await {
         Ok(res) =>
             {
                 let payload = PayloadWithData {
@@ -110,10 +110,10 @@ pub async fn update_company(store: Arc<dyn StoreMethods>, claims: Claims, compan
 }
 
 #[instrument(level = "info")]
-pub async fn delete_company(store: Arc<dyn StoreMethods>, claims: Claims, company: Company)
+pub async fn delete_company(store: Arc<dyn StoreMethods + Send + Sync>, claims: Claims, company: Company)
                                -> Result<impl warp::Reply, warp::Rejection>
 {
-    match CompanyMac::delete(&store, company.id.unwrap()).await {
+    match store.delete_company(company.id.unwrap()).await {
         Ok(_) =>
             {
                 let payload = PayloadNoData {
