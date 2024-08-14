@@ -1,11 +1,11 @@
 use std::sync::Arc;
 use warp::{Filter};
 use crate::middleware::authen::auth;
-use crate::models::store::{Store, StoreMethods};
+use crate::models::store_trait::StoreMethods;
 use crate::controllers::company::{create_company, delete_company, get_company, get_list_company, update_company};
 use crate::models::role::ADMIN_ROLE_ID;
 
-pub fn company_route(base_path: &'static str, store: Arc<dyn StoreMethods>)
+pub fn company_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
                      -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
 {
     let company_path = warp::path(base_path)

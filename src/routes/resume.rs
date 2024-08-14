@@ -3,9 +3,8 @@ use warp::Filter;
 use crate::controllers::resume::{create_resume, delete_resume, get_list_resume_by_job, get_list_resume_by_user_id, get_resume, update_resume};
 use crate::middleware::authen::auth;
 use crate::models::role::{USER_ROLE_ID};
-use crate::models::store::{Store, StoreMethods};
-
-pub fn resume_route(base_path: &'static str, store: Arc<dyn StoreMethods>)
+use crate::models::store_trait::StoreMethods;
+pub fn resume_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
                      -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
 {
     let resume_path = warp::path(base_path)
