@@ -4,13 +4,16 @@ use crate::controllers::resume::{create_resume, delete_resume, get_list_resume_b
 use crate::middleware::authen::auth;
 use crate::models::role::{USER_ROLE_ID};
 use crate::models::store_trait::StoreMethods;
+
+// Configures and returns the Warp filter for handling HTTP requests of job
 pub fn resume_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
                      -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
 {
+    //Add base path into path
     let resume_path = warp::path(base_path)
                         .and(warp::path("v1"))
                         .and(warp::path("resume"));
-
+    //Configures store filter
     let store_filter = warp::any().map(move || store.clone());
 
     //POST api/v1/resume/createResume

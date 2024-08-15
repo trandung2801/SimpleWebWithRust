@@ -1,32 +1,38 @@
-use std::io::ErrorKind;
+use std::str::Utf8Error;
 use warp::{
     filters::{body::BodyDeserializeError, cors::CorsForbidden},
     http::StatusCode,
     reject::Reject,
     Rejection, Reply,
 };
-use tracing::{event, Level, instrument};
+use tracing::{event, Level};
 use argon2::Error as ArgonError;
-use reqwest::Error as ReqwestError;
-use reqwest_middleware::Error as MiddlewareReqwestError;
 
 #[derive(Debug)]
 pub enum Error {
-    MissingParameters,
-    ParseError(std::num::ParseIntError),
-    ArgonLibraryError(ArgonError),
+    //Error of database
     DatabaseQueryError(sqlx::Error),
-    MigrationError(sqlx::migrate::MigrateError),
-    ReqwestAPIError(ReqwestError),
-    MiddlewareReqwestAPIError(MiddlewareReqwestError),
-    ClientError(APILayerError),
-    ServerError(APILayerError),
-    LoadConfigErr(serde_yaml::Error),
 
-    WrongPassword,
+    //Error of token
     CannotDecryptToken,
     CannotEncryptToken,
+
+    //Error of hash and verify password
+    ArgonLibraryError(ArgonError),
+    WrongPassword,
+
+    //Error of authorized user and authenticated user
     Unauthorized,
+    Unauthenticated,
+    Utf8Error(Utf8Error),
+    MissingBearerAuthType,
+
+
+    ParseError(std::num::ParseIntError),
+    MigrationError(sqlx::migrate::MigrateError),
+    LoadConfigErr(serde_yaml::Error),
+    MissingParameters,
+
 }
 
 
@@ -45,80 +51,79 @@ impl std::fmt::Display for APILayerError {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match &*self {
-            Error::ParseError(ref err) => write!(f, "Cannot parse parameter: {}", err),
+            Error::DatabaseQueryError(_) => write!(f, "Database query error, invalid data"),
+
+            Error::CannotDecryptToken => write!(f, "Can't decrypt token error"),
+            Error::CannotEncryptToken => write!(f, "Can't encrypt token error"),
+
+            Error::ArgonLibraryError(_) => write!(f, "Can't verify password"),
+            Error::WrongPassword => write!(f, "Wrong password"),
+
+            Error::Unauthorized => write!(f, "No permission to change the underlying resource"),
+            Error::Unauthenticated => write!(f, "Un authenticated"),
+            Error::Utf8Error(err) => write!(f, "Utf8 error: {}", err),
+            Error::MissingBearerAuthType => write!(f, "Missing bearer auth type"),
+
+            Error::ParseError(ref err) => write!(f, "Can't parse parameter: {}", err),
             Error::MissingParameters => write!(f, "Missing parameter"),
-            Error::ArgonLibraryError(_) => write!(f, "Cannot verifiy password"),
-            Error::DatabaseQueryError(_) => write!(f, "Cannot update, invalid data"),
-            Error::MigrationError(_) => write!(f, "Cannot migrate data"),
-            Error::ReqwestAPIError(err) => write!(f, "External API error: {}", err),
-            Error::MiddlewareReqwestAPIError(err) => write!(f, "External API error: {}", err),
-            Error::ClientError(err) => write!(f, "External Client error: {}", err),
-            Error::ServerError(err) => write!(f, "External Server error: {}", err),
+            Error::MigrationError(_) => write!(f, "Can't migrate data"),
             Error::LoadConfigErr(err) => write!(f, "Load config error: {}", err),
 
-            Error::WrongPassword => write!(f, "Wrong password"),
-            Error::CannotDecryptToken => write!(f, "Cannot decrypt error"),
-            Error::CannotEncryptToken => write!(f, "Cannot encrypt error"),
-            Error::Unauthorized => write!(f, "No permission to change the underlying resource"),
         }
     }
 }
-
 
 impl Reject for Error {}
 impl Reject for APILayerError {}
 
 const DUPLICATE_KEY: u32 = 23505;
 
-#[instrument]
 pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
     if let Some(Error::DatabaseQueryError(e)) = r.find() {
         event!(Level::ERROR, "Database query error");
-
         match e {
             sqlx::Error::Database(err) => {
                 if err.code().unwrap().parse::<u32>().unwrap() == DUPLICATE_KEY {
                     Ok(warp::reply::with_status(
-                        "Account already exsists".to_string(),
+                        "User already exists".to_string(),
                         StatusCode::UNPROCESSABLE_ENTITY,
                     ))
                 } else {
                     Ok(warp::reply::with_status(
-                        "Cannot update data".to_string(),
+                        "Can't update data".to_string(),
                         StatusCode::UNPROCESSABLE_ENTITY,
                     ))
                 }
             },
             _ => {
                 Ok(warp::reply::with_status(
-                    "Cannot update data".to_string(),
-                    StatusCode::UNPROCESSABLE_ENTITY,
+                    "Not Found".to_string(),
+                    StatusCode::NOT_FOUND,
                 ))
             }
         }
-    } else if let Some(Error::ReqwestAPIError(e)) = r.find() {
-        event!(Level::ERROR, "{}", e);
+    } else if let Some(Error::WrongPassword) = r.find() {
         Ok(warp::reply::with_status(
-            "Internal Server Error".to_string(),
-            StatusCode::INTERNAL_SERVER_ERROR,
+            "Wrong E-Mail/Password combination".to_string(),
+            StatusCode::UNAUTHORIZED,
         ))
-    } else if let Some(Error::MiddlewareReqwestAPIError(e)) = r.find() {
-        event!(Level::ERROR, "{}", e);
+    } else if let Some(Error::Unauthorized) = r.find() {
+        event!(Level::ERROR, "Not matching account id");
         Ok(warp::reply::with_status(
-            "Internal Server Error".to_string(),
-            StatusCode::INTERNAL_SERVER_ERROR,
+            "No permission to change underlying resource".to_string(),
+            StatusCode::UNAUTHORIZED,
         ))
-    } else if let Some(Error::ClientError(e)) = r.find() {
-        event!(Level::ERROR, "{}", e);
+    } else if let Some(Error::Unauthenticated) = r.find() {
+        event!(Level::ERROR, "Un authenticated");
         Ok(warp::reply::with_status(
-            "Internal Server Error".to_string(),
-            StatusCode::INTERNAL_SERVER_ERROR,
+            "Un authenticated".to_string(),
+            StatusCode::UNAUTHORIZED,
         ))
-    } else if let Some(Error::ServerError(e)) = r.find() {
-        event!(Level::ERROR, "{}", e);
+    } else if let Some(Error::MissingBearerAuthType) = r.find() {
+        event!(Level::ERROR, "Un authenticated");
         Ok(warp::reply::with_status(
-            "Internal Server Error".to_string(),
-            StatusCode::INTERNAL_SERVER_ERROR,
+            "Missing bearer auth type in header".to_string(),
+            StatusCode::UNAUTHORIZED,
         ))
     } else if let Some(error) = r.find::<CorsForbidden>() {
         event!(Level::ERROR, "CORS forbidden error: {}", error);
@@ -127,7 +132,7 @@ pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
             StatusCode::FORBIDDEN,
         ))
     } else if let Some(error) = r.find::<BodyDeserializeError>() {
-        event!(Level::ERROR, "Cannot deserizalize request body: {}", error);
+        event!(Level::ERROR, "Can't deserialize request body: {}", error);
         Ok(warp::reply::with_status(
             error.to_string(),
             StatusCode::UNPROCESSABLE_ENTITY,
@@ -137,31 +142,6 @@ pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
         Ok(warp::reply::with_status(
             error.to_string(),
             StatusCode::UNPROCESSABLE_ENTITY,
-        ))
-        //auth error
-    } else if let Some(Error::Unauthorized) = r.find() {
-        event!(Level::ERROR, "Not matching account id");
-        Ok(warp::reply::with_status(
-            "No permission to change underlying resource".to_string(),
-            StatusCode::UNAUTHORIZED,
-        ))
-    } else if let Some(Error::WrongPassword) = r.find() {
-        event!(Level::ERROR, "Entered wrong password");
-        Ok(warp::reply::with_status(
-            "Wrong E-Mail/Password combination".to_string(),
-            StatusCode::UNAUTHORIZED,
-        ))
-    } else if let Some(Error::CannotEncryptToken) = r.find() {
-        event!(Level::ERROR, "Entered wrong password");
-        Ok(warp::reply::with_status(
-            "Internal Server Error".to_string(),
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ))
-    } else if let Some(Error::CannotDecryptToken) = r.find() {
-        event!(Level::ERROR, "Entered wrong password");
-        Ok(warp::reply::with_status(
-            "Internal Server Error".to_string(),
-            StatusCode::INTERNAL_SERVER_ERROR,
         ))
     } else {
         event!(Level::WARN, "Requested route was not found");

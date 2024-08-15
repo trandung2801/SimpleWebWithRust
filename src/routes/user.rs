@@ -5,12 +5,13 @@ use crate::middleware::authen::auth;
 use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, USER_ROLE_ID};
 use crate::models::store_trait::StoreMethods;
 
-// pub fn user_route(base_path: &'static str, store: Store)
+// Configures and returns the Warp filter for handling HTTP requests of user.
 pub fn user_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
                  -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    //Add base path into path
     let user_path = warp::path(base_path)
                                                             .and(warp::path("v1"));
-
+    //Configures store filter
     let store_filter = warp::any().map(move || store.clone());
 
     //POST api/v1/register
