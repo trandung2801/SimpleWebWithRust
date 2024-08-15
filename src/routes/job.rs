@@ -1,16 +1,19 @@
 use std::sync::Arc;
 use crate::models::store_trait::StoreMethods;
 use warp::{Filter};
-use crate::controllers::job::{create_job, delete_job, get_job, get_list_job, update_job};
+use crate::controllers::job::{apply_job, create_job, delete_job, get_job, get_list_job, update_job};
 use crate::middleware::authen::auth;
-use crate::models::role::{HR_ROLE_ID};
+use crate::models::role::{HR_ROLE_ID, USER_ROLE_ID};
 
+// Configures and returns the Warp filter for handling HTTP requests of job
 pub fn job_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
                  -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
 {
+    //Add base path into path
     let job_path = warp::path(base_path)
         .and(warp::path("v1"))
         .and(warp::path("job"));
+    //Configures store filter
     let store_filter = warp::any().map(move || store.clone());
 
     //POST api/v1/job/createJob
@@ -51,6 +54,16 @@ pub fn job_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + S
         .and(warp::body::json())
         .and_then(update_job);
 
+    //POST api/v1/job/applyJob
+    let apply_job_api = job_path
+        .and(warp::path("applyJob"))
+        .and(warp::path::end())
+        .and(warp::post())
+        .and(store_filter.clone())
+        .and(auth(USER_ROLE_ID))
+        .and(warp::body::json())
+        .and_then(apply_job);
+
     //PUT api/v1/job/deleteJob
     let delete_job_api = job_path
         .and(warp::path("deleteJob"))
@@ -65,6 +78,7 @@ pub fn job_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + S
         .or(get_job_api)
         .or(get_list_job_api)
         .or(update_job_api)
+        .or(apply_job_api)
         .or(delete_job_api)
 }
 

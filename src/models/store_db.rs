@@ -2,6 +2,7 @@ use sqlx::{
     postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use tracing::{event, Level};
 use async_trait::async_trait;
 use handle_errors::Error;
 use crate::models::map_resume_job::{MapResumeJob, MapResumeJobId, NewMapResumeJob};
@@ -18,7 +19,6 @@ pub struct Store {
 }
 impl Store {
     pub async fn new(db_url: &str) -> Self {
-        tracing::warn!("{}", db_url);
         let db_pool = match PgPoolOptions::new()
             .max_connections(5)
             .connect(db_url)
@@ -52,8 +52,8 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(error) => {
-                tracing::event!(
-                    tracing::Level::ERROR,
+                event!(
+                    Level::ERROR,
                     code = error
                         .as_database_error()
                         .unwrap()
@@ -87,7 +87,7 @@ impl StoreMethods for Store {
         {
             Ok(list_map) => Ok(list_map),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -109,7 +109,7 @@ impl StoreMethods for Store {
         {
             Ok(list_map) => Ok(list_map),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -140,8 +140,8 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(error) => {
-                tracing::event!(
-                    tracing::Level::ERROR,
+                event!(
+                    Level::ERROR,
                     code = error
                         .as_database_error()
                         .unwrap()
@@ -180,7 +180,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -204,7 +204,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -229,7 +229,7 @@ impl StoreMethods for Store {
         {
             Ok(users) => Ok(users),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -257,7 +257,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -285,7 +285,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -313,7 +313,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -330,7 +330,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -354,8 +354,8 @@ impl StoreMethods for Store {
         {
             Ok(role) => Ok(role),
             Err(error) => {
-                tracing::event!(
-                    tracing::Level::ERROR,
+                event!(
+                    Level::ERROR,
                     code = error
                         .as_database_error()
                         .unwrap()
@@ -391,7 +391,7 @@ impl StoreMethods for Store {
         {
             Ok(role) => Ok(role),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -411,7 +411,7 @@ impl StoreMethods for Store {
         {
             Ok(roles) => Ok(roles),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -436,7 +436,7 @@ impl StoreMethods for Store {
         {
             Ok(role) => Ok(role),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -453,7 +453,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -485,8 +485,8 @@ impl StoreMethods for Store {
         {
             Ok(company) => Ok(company),
             Err(error) => {
-                tracing::event!(
-                    tracing::Level::ERROR,
+                event!(
+                    Level::ERROR,
                     code = error
                         .as_database_error()
                         .unwrap()
@@ -526,7 +526,7 @@ impl StoreMethods for Store {
         {
             Ok(company) => Ok(company),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -551,7 +551,7 @@ impl StoreMethods for Store {
         {
             Ok(company) => Ok(company),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -577,7 +577,7 @@ impl StoreMethods for Store {
         {
             Ok(companies) => Ok(companies),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -610,7 +610,7 @@ impl StoreMethods for Store {
         {
             Ok(company) => Ok(company),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -627,7 +627,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -665,8 +665,8 @@ impl StoreMethods for Store {
         {
             Ok(resume) => Ok(resume),
             Err(error) => {
-                tracing::event!(
-                    tracing::Level::ERROR,
+                event!(
+                    Level::ERROR,
                     code = error
                         .as_database_error()
                         .unwrap()
@@ -708,7 +708,7 @@ impl StoreMethods for Store {
         {
             Ok(job) => Ok(job),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -737,7 +737,7 @@ impl StoreMethods for Store {
         {
             Ok(jobs) => Ok(jobs),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -777,7 +777,7 @@ impl StoreMethods for Store {
         {
             Ok(job) => Ok(job),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -794,7 +794,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -822,8 +822,8 @@ impl StoreMethods for Store {
         {
             Ok(resume) => Ok(resume),
             Err(error) => {
-                tracing::event!(
-                    tracing::Level::ERROR,
+                event!(
+                    Level::ERROR,
                     code = error
                         .as_database_error()
                         .unwrap()
@@ -861,7 +861,7 @@ impl StoreMethods for Store {
         {
             Ok(resume) => Ok(resume),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -884,7 +884,7 @@ impl StoreMethods for Store {
         {
             Ok(resume) => Ok(resume),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -910,7 +910,7 @@ impl StoreMethods for Store {
         {
             Ok(resumes) => Ok(resumes),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -937,7 +937,7 @@ impl StoreMethods for Store {
         {
             Ok(resume) => Ok(resume),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -954,7 +954,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "{:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }

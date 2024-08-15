@@ -4,28 +4,28 @@ use config::{Config as ConfigLoader, File, FileFormat};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct PostgresConfig{
-    /// Database user
+    // Database user
     pub db_user: String,
-    /// Database user
+    // Database user
     pub db_password: String,
-    /// URL for the postgres database
+    // URL for the postgres database
     pub db_host: String,
-    /// PORT number for the database connection
+    // PORT number for the database connection
     pub db_port: u16,
-    /// Database name
+    // Database name
     pub db_name: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Server{
-    /// Which HOST the server is listening to
+    // Which HOST the server is listening to
     pub host: String,
-    /// Which PORT the server is listening to
+    // Which PORT the server is listening to
     pub port: u16
 }
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config{
-    /// Which errors we want to log (info, warn or error)
+    // Which errors we want to log (info, warn or error)
     pub log_level: String,
     pub server: Server,
     pub database: Option<String>,
@@ -34,7 +34,7 @@ pub struct Config{
 
 #[derive(Parser, Debug)]
 pub struct Args {
-    /// Config file
+    // Config file
     #[clap(long, default_value = "src/config/config-default.yaml")]
     pub config_path: String,
 }
