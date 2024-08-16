@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use handle_errors::Error;
 
 /// Pagination struct which is getting extract
@@ -75,7 +74,6 @@ impl PaginationMethods for  Pagination {
                     .map_err(Error::ParseError)?,
             });
         }
-
         Err(Error::MissingParameters)
     }
 
@@ -98,6 +96,7 @@ impl PaginationMethods for  Pagination {
                     .unwrap()
                     .parse()
                     .map_err(Error::ParseError)?,
+                // Takes the "jobId" parameter in the query and tries to convert it to a number
                 job_id: params
                     .get("jobId")
                     .unwrap()
@@ -105,7 +104,6 @@ impl PaginationMethods for  Pagination {
                     .map_err(Error::ParseError)?,
             });
         }
-
         Err(Error::MissingParameters)
     }
 }

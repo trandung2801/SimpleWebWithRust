@@ -3,7 +3,7 @@ use std::sync::Arc;
 use warp::http::StatusCode;
 use tracing::{event, instrument, Level};
 use crate::service::convert_to_json::{Data, PayloadNoData, PayloadWithData};
-use crate::middleware::jwt::{Claims};
+use crate::service::jwt::{Claims};
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::store_trait::StoreMethods;
@@ -18,8 +18,8 @@ pub async fn create_company(store: Arc<dyn StoreMethods + Send + Sync>, claims: 
                             -> Result<impl warp::Reply, warp::Rejection>
 {
     //Check valid company
-    let new_email = new_company.email;
-    match store.get_company_by_email(&new_email).await {
+    let new_email = new_company.email.clone();
+    match store.get_company_by_email(new_email).await {
         Ok(_res) => {
             let payload = PayloadNoData {
                 message:"Email company already exists".to_string(),
@@ -31,7 +31,7 @@ pub async fn create_company(store: Arc<dyn StoreMethods + Send + Sync>, claims: 
         _ => ()
     }
     let company = NewCompany {
-        email: new_email,
+        email: new_company.email,
         name: new_company.name,
         address: new_company.address,
         description: new_company.description,
@@ -110,7 +110,7 @@ pub async fn update_company(store: Arc<dyn StoreMethods + Send + Sync>, claims: 
 {
     // Check valid company
     let email_update = company.email.clone();
-    match store.get_company_by_email(&email_update).await {
+    match store.get_company_by_email(email_update).await {
         Ok(_res) => {
             let payload = PayloadNoData {
                 message: "Email company already exists".to_string(),

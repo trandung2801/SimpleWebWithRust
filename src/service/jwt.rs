@@ -56,7 +56,7 @@ impl JwtActions for Jwt {
         {
             Ok(token) => Ok(token),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Encode from claim has error: {:?}", e);
                 Err(Error::CannotEncryptToken)
             }
         }
@@ -72,7 +72,7 @@ impl JwtActions for Jwt {
         ) {
             Ok(token_data) => Ok(token_data.claims),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Decode access token from token has error: {:?}", e);
                 Err(Error::CannotDecryptToken)
             }
         }

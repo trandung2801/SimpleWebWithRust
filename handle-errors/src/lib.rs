@@ -13,6 +13,9 @@ pub enum Error {
     //Error of database
     DatabaseQueryError(sqlx::Error),
 
+    //Error of In Memory
+    NotFound,
+
     //Error of token
     CannotDecryptToken,
     CannotEncryptToken,
@@ -53,6 +56,8 @@ impl std::fmt::Display for Error {
         match &*self {
             Error::DatabaseQueryError(_) => write!(f, "Database query error, invalid data"),
 
+            Error::NotFound => write!(f, "Not found data"),
+
             Error::CannotDecryptToken => write!(f, "Can't decrypt token error"),
             Error::CannotEncryptToken => write!(f, "Can't encrypt token error"),
 
@@ -76,6 +81,8 @@ impl std::fmt::Display for Error {
 impl Reject for Error {}
 impl Reject for APILayerError {}
 
+// search in
+//https://www.ibm.com/docs/en/db2-for-zos/13?topic=codes-sqlstate-values-common-error#db2z_sqlstatevalues__classcode02
 const DUPLICATE_KEY: u32 = 23505;
 
 pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
@@ -102,6 +109,11 @@ pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
                 ))
             }
         }
+    } else if let Some(Error::NotFound) = r.find() {
+        Ok(warp::reply::with_status(
+            "Not Found Data".to_string(),
+            StatusCode::NOT_FOUND,
+        ))
     } else if let Some(Error::WrongPassword) = r.find() {
         Ok(warp::reply::with_status(
             "Wrong E-Mail/Password combination".to_string(),

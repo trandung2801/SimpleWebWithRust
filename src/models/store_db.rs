@@ -14,10 +14,10 @@ use crate::models::resume::{Resume, ResumeId, NewResume};
 use crate::models::store_trait::StoreMethods;
 
 #[derive(Debug, Clone)]
-pub struct Store {
+pub struct DatabaseStore {
     pub connection: PgPool,
 }
-impl Store {
+impl DatabaseStore {
     pub async fn new(db_url: &str) -> Self {
         let db_pool = match PgPoolOptions::new()
             .max_connections(5)
@@ -27,14 +27,14 @@ impl Store {
             Err(e) => panic!("Couldn't establish DB connection: {}", e),
         };
 
-        Store {
+        DatabaseStore {
             connection: db_pool,
         }
     }
 }
 
 #[async_trait]
-impl StoreMethods for Store {
+impl StoreMethods for DatabaseStore {
     async fn create_map_job_resume(&self, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>
     {
         match sqlx::query("INSERT INTO map_resume_job (resume_id, job_id) \
@@ -51,25 +51,9 @@ impl StoreMethods for Store {
             .await
         {
             Ok(user) => Ok(user),
-            Err(error) => {
-                event!(
-                    Level::ERROR,
-                    code = error
-                        .as_database_error()
-                        .unwrap()
-                        .code()
-                        .unwrap()
-                        .parse::<i32>()
-                        .unwrap(),
-                    db_message =
-                        error.as_database_error().unwrap().message(),
-                    constraint = error
-                        .as_database_error()
-                        .unwrap()
-                        .constraint()
-                        .unwrap()
-                );
-                Err(Error::DatabaseQueryError(error))
+            Err(e) => {
+                event!(Level::ERROR, "Create map_job_resume from database has error: {:?}", e);
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -87,7 +71,7 @@ impl StoreMethods for Store {
         {
             Ok(list_map) => Ok(list_map),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get list job by resume id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -109,7 +93,7 @@ impl StoreMethods for Store {
         {
             Ok(list_map) => Ok(list_map),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get list job by job id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -139,29 +123,13 @@ impl StoreMethods for Store {
             .await
         {
             Ok(user) => Ok(user),
-            Err(error) => {
-                event!(
-                    Level::ERROR,
-                    code = error
-                        .as_database_error()
-                        .unwrap()
-                        .code()
-                        .unwrap()
-                        .parse::<i32>()
-                        .unwrap(),
-                    db_message =
-                        error.as_database_error().unwrap().message(),
-                    constraint = error
-                        .as_database_error()
-                        .unwrap()
-                        .constraint()
-                        .unwrap()
-                );
-                Err(Error::DatabaseQueryError(error))
+            Err(e) => {
+                event!(Level::ERROR, "Create user for database has error: {:?}", e);
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
-    async fn get_user_by_email(&self, user_email: &String)
+    async fn get_user_by_email(&self, user_email: String)
                                -> Result<User, Error>
     {
         match sqlx::query("SELECT * FROM USERS WHERE email = $1")
@@ -180,7 +148,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get user by email from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -204,7 +172,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get user by id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -229,7 +197,7 @@ impl StoreMethods for Store {
         {
             Ok(users) => Ok(users),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get list user from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -257,7 +225,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Update user from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -285,7 +253,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Update password for user from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -296,10 +264,10 @@ impl StoreMethods for Store {
     {
         match sqlx::query(
             "Update users SET role_id = $1 \
-                where email = $2 \
+                where id = $2 \
                 RETURNING id, email, password, company_id, role_id, is_delete")
             .bind(role_id.0)
-            .bind(user.email)
+            .bind(user.id.0)
             .map(|row: PgRow| User {
                 id: Some(UserId(row.get("id"))),
                 email:row.get("email"),
@@ -313,7 +281,7 @@ impl StoreMethods for Store {
         {
             Ok(user) => Ok(user),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Set role for user from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -330,7 +298,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Delete user by id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -353,25 +321,9 @@ impl StoreMethods for Store {
             .await
         {
             Ok(role) => Ok(role),
-            Err(error) => {
-                event!(
-                    Level::ERROR,
-                    code = error
-                        .as_database_error()
-                        .unwrap()
-                        .code()
-                        .unwrap()
-                        .parse::<i32>()
-                        .unwrap(),
-                    db_message =
-                        error.as_database_error().unwrap().message(),
-                    constraint = error
-                        .as_database_error()
-                        .unwrap()
-                        .constraint()
-                        .unwrap()
-                );
-                Err(Error::DatabaseQueryError(error))
+            Err(e) => {
+                event!(Level::ERROR, "Create role for database has error: {:?}", e);
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -391,7 +343,7 @@ impl StoreMethods for Store {
         {
             Ok(role) => Ok(role),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get role by id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -411,7 +363,7 @@ impl StoreMethods for Store {
         {
             Ok(roles) => Ok(roles),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get list role from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -436,7 +388,7 @@ impl StoreMethods for Store {
         {
             Ok(role) => Ok(role),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Update role from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -453,7 +405,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Delete role from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -484,30 +436,14 @@ impl StoreMethods for Store {
             .await
         {
             Ok(company) => Ok(company),
-            Err(error) => {
-                event!(
-                    Level::ERROR,
-                    code = error
-                        .as_database_error()
-                        .unwrap()
-                        .code()
-                        .unwrap()
-                        .parse::<i32>()
-                        .unwrap(),
-                    db_message =
-                        error.as_database_error().unwrap().message(),
-                    constraint = error
-                        .as_database_error()
-                        .unwrap()
-                        .constraint()
-                        .unwrap()
-                );
-                Err(Error::DatabaseQueryError(error))
+            Err(e) => {
+                event!(Level::ERROR, "Create company for database has error: {:?}", e);
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
 
-    async fn get_company_by_email(&self, company_email: &String)
+    async fn get_company_by_email(&self, company_email: String)
                                   -> Result<Company, Error>
     {
         match sqlx::query("SELECT * FROM COMPANIES WHERE email = $1")
@@ -526,7 +462,7 @@ impl StoreMethods for Store {
         {
             Ok(company) => Ok(company),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get company by email from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -551,7 +487,7 @@ impl StoreMethods for Store {
         {
             Ok(company) => Ok(company),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get company by id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -577,7 +513,7 @@ impl StoreMethods for Store {
         {
             Ok(companies) => Ok(companies),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get list company from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -610,7 +546,7 @@ impl StoreMethods for Store {
         {
             Ok(company) => Ok(company),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Update company from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -627,7 +563,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Delete company from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -664,25 +600,9 @@ impl StoreMethods for Store {
             .await
         {
             Ok(resume) => Ok(resume),
-            Err(error) => {
-                event!(
-                    Level::ERROR,
-                    code = error
-                        .as_database_error()
-                        .unwrap()
-                        .code()
-                        .unwrap()
-                        .parse::<i32>()
-                        .unwrap(),
-                    db_message =
-                        error.as_database_error().unwrap().message(),
-                    constraint = error
-                        .as_database_error()
-                        .unwrap()
-                        .constraint()
-                        .unwrap()
-                );
-                Err(Error::DatabaseQueryError(error))
+            Err(e) => {
+                event!(Level::ERROR, "Create job for database has error: {:?}", e);
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -708,7 +628,7 @@ impl StoreMethods for Store {
         {
             Ok(job) => Ok(job),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Create job from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -737,7 +657,7 @@ impl StoreMethods for Store {
         {
             Ok(jobs) => Ok(jobs),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get job by id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -777,7 +697,7 @@ impl StoreMethods for Store {
         {
             Ok(job) => Ok(job),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Update job from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -794,7 +714,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Delete job from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -821,25 +741,9 @@ impl StoreMethods for Store {
             .await
         {
             Ok(resume) => Ok(resume),
-            Err(error) => {
-                event!(
-                    Level::ERROR,
-                    code = error
-                        .as_database_error()
-                        .unwrap()
-                        .code()
-                        .unwrap()
-                        .parse::<i32>()
-                        .unwrap(),
-                    db_message =
-                        error.as_database_error().unwrap().message(),
-                    constraint = error
-                        .as_database_error()
-                        .unwrap()
-                        .constraint()
-                        .unwrap()
-                );
-                Err(Error::DatabaseQueryError(error))
+            Err(e) => {
+                event!(Level::ERROR, "Create resume for database has error: {:?}", e);
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -861,30 +765,7 @@ impl StoreMethods for Store {
         {
             Ok(resume) => Ok(resume),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError(e))
-            }
-        }
-    }
-
-    async fn get_resume_by_user_id(&self, user_id: UserId)
-                                   -> Result<Resume, Error>
-    {
-        match sqlx::query("SELECT * FROM RESUMES WHERE user_id = $1")
-            .bind(user_id.0)
-            .map(|row: PgRow| Resume {
-                id: Some(ResumeId(row.get("id"))),
-                user_id:UserId(row.get("user_id")),
-                email:row.get("email"),
-                url: row.get("url"),
-                is_delete: row.get("is_delete")
-            })
-            .fetch_one(&self.connection)
-            .await
-        {
-            Ok(resume) => Ok(resume),
-            Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get resume from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -910,7 +791,7 @@ impl StoreMethods for Store {
         {
             Ok(resumes) => Ok(resumes),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Get list resume by user id from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -937,7 +818,7 @@ impl StoreMethods for Store {
         {
             Ok(resume) => Ok(resume),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Update resume from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }
@@ -954,7 +835,7 @@ impl StoreMethods for Store {
         {
             Ok(_) => Ok(true),
             Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
+                event!(Level::ERROR, "Delete resume from database has error: {:?}", e);
                 Err(Error::DatabaseQueryError(e))
             }
         }

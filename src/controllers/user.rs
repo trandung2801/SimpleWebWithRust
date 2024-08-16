@@ -6,7 +6,7 @@ use tracing::{event, instrument, Level};
 use handle_errors::Error;
 use warp::http::StatusCode;
 use crate::service::convert_to_json::{PayloadWithData, Data, PayloadForLogin, PayloadNoData};
-use crate::middleware::jwt::{Jwt, Claims, JwtActions};
+use crate::service::jwt::{Jwt, Claims, JwtActions};
 use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, RoleId};
 use crate::models::user::{UserInfo, AuthInfo, UserId, User};
@@ -45,7 +45,7 @@ pub async fn register(store: Arc<dyn StoreMethods + Send + Sync>, new_user: Auth
 {
     // Check valid user
     let new_email = new_user.email;
-    match store.get_user_by_email(&new_email).await {
+    match store.get_user_by_email(new_email.clone()).await {
         Ok(_res) => {
             let payload = PayloadNoData {
                 message: "Email already exists".to_string(),
@@ -86,7 +86,7 @@ pub async fn login(store: Arc<dyn StoreMethods + Send + Sync>, login_info: AuthI
     -> Result<impl warp::Reply, warp::Rejection>
 {
     // Login
-    match store.get_user_by_email(&login_info.email).await {
+    match store.get_user_by_email(login_info.email.clone()).await {
         Ok(user) => match verify_password(
             &user.password,
             login_info.password.as_bytes(),
