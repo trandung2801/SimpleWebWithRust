@@ -18,7 +18,7 @@ pub trait StoreMethods: fmt::Debug + Send + Sync {
     //methods for users
     async fn create_user(&self, new_user: AuthInfo)
                          -> Result<User, Error>;
-    async fn get_user_by_email(&self, user_email: &String)
+    async fn get_user_by_email(&self, user_email: String)
                                -> Result<User, Error>;
 
     async fn get_user_by_id(&self, user_id: UserId)
@@ -33,6 +33,8 @@ pub trait StoreMethods: fmt::Debug + Send + Sync {
                              -> Result<User, Error>;
     async fn set_role(&self, user: UserInfo, role_id: RoleId)
                       -> Result<User, Error>;
+
+    // methods for roles
     async fn create_role(&self, new_role: RoleInfo)
                          -> Result<Role, Error>;
     async fn get_role_by_id(&self, role_id: RoleId)
@@ -43,9 +45,10 @@ pub trait StoreMethods: fmt::Debug + Send + Sync {
                          -> Result<Role, Error>;
     async fn delete_role(&self, role_id: RoleId)
                          -> Result<bool, Error>;
+    // methods for company
     async fn create_company(&self, new_company: NewCompany)
                             -> Result<Company, Error>;
-    async fn get_company_by_email(&self, company_email: &String)
+    async fn get_company_by_email(&self, company_email: String)
                                   -> Result<Company, Error>;
     async fn get_company_by_id(&self, company_id: CompanyId)
                                -> Result<Company, Error>;
@@ -66,12 +69,11 @@ pub trait StoreMethods: fmt::Debug + Send + Sync {
                         -> Result<Job, Error>;
     async fn delete_job(&self, job_id: JobId)
                         -> Result<bool, Error>;
+    //methods for resume
     async fn create_resume(&self, new_resume: NewResume)
                            -> Result<Resume, Error>;
     async fn get_resume_by_id(&self, resume_id: ResumeId)
                               -> Result<Resume, Error>;
-    async fn get_resume_by_user_id(&self, user_id: UserId)
-                                   -> Result<Resume, Error>;
     async fn get_list_resume_by_user_id(&self, limit: Option<i32>, offset: i32, user_id: UserId)
                                         -> Result<Vec<Resume>, Error>;
     async fn update_resume(&self, resume: Resume)

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use reqwest::StatusCode;
 use tracing::{event, instrument, Level};
 use crate::service::convert_to_json::{Data, PayloadNoData, PayloadWithData};
-use crate::middleware::jwt::Claims;
+use crate::service::jwt::Claims;
 use crate::models::job::{NewJob, JobId, Job};
 use crate::models::map_resume_job::NewMapResumeJob;
 use crate::models::store_trait::StoreMethods;

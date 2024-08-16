@@ -6,7 +6,7 @@ use warp:: {
 };
 use tracing::{event, Level};
 use handle_errors::Error;
-use crate::middleware::jwt::{Jwt, Claims, JwtActions};
+use crate::service::jwt::{Jwt, Claims, JwtActions};
 
 const BEARER: &str = "Bearer";
 
@@ -78,7 +78,7 @@ fn jwt_from_header(headers: &HeaderMap<HeaderValue>)
     let auth_header = match std::str::from_utf8(header.as_bytes()) {
         Ok(v) => v,
         Err(e) => {
-            event!(Level::ERROR, "{:?}", e);
+            event!(Level::ERROR, "Convert header value as &[u8] to &str has error: {:?}", e);
             return Err(Error::Utf8Error(e))
         }
     };

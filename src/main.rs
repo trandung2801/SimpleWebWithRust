@@ -1,12 +1,14 @@
+#![warn(clippy::all)]
 use std::sync::Arc;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
 use tokio::sync::{oneshot, oneshot::Sender};
-use tracing::{instrument};
+use tracing::{info, instrument};
 use handle_errors::return_error;
 use routes::user::user_route;
 use crate::config::config::Config;
-use crate::models::store_db::Store;
+use crate::models::store_db::DatabaseStore;
+use crate::models::store_in_memory::InMemoryStore;
 use crate::models::store_trait::StoreMethods;
 use crate::routes::company::company_route;
 use crate::routes::job::job_route;
@@ -23,17 +25,6 @@ mod service;
 #[instrument]
 async fn main() {
     let config = Config::new().expect("Config env not set");
-    let store = build_store(&config).await;
-    let cors = warp::cors()
-        .allow_any_origin()
-        .allow_header("content-type")
-        .allow_methods(&[
-            Method::PUT,
-            Method::DELETE,
-            Method::GET,
-            Method::POST,
-        ]);
-
     let log_filter = format!(
         "handle_errors={},backend={},warp={}",
         config.log_level, config.log_level, config.log_level
@@ -46,6 +37,19 @@ async fn main() {
         // routes' durations!
         .with_span_events(FmtSpan::CLOSE)
         .init();
+
+    let store = build_store(&config).await;
+    let cors = warp::cors()
+        .allow_any_origin()
+        .allow_header("content-type")
+        .allow_methods(&[
+            Method::PUT,
+            Method::DELETE,
+            Method::GET,
+            Method::POST,
+        ]);
+
+
 
     let user_routes = user_route("api", store.clone());
     let company_routes = company_route("api", store.clone());
@@ -77,7 +81,16 @@ pub async fn build_store(config: &Config) -> Arc<dyn StoreMethods + Send + Sync>
         config.postgres.db_name
     );
 
-    let store: Arc<dyn StoreMethods + Send + Sync>  = Arc::new(Store::new(&url).await);
+    let store: Arc<dyn StoreMethods + Send + Sync> = if config.database.clone().unwrap() == "in-memory".to_string() {
+        info!("Using in-memory database");
+        Arc::new(InMemoryStore::new())
+    } else if config.database.clone().unwrap() == "postgres".to_string(){
+        info!("Using postgres database");
+        Arc::new(DatabaseStore::new(&url).await)
+    } else {
+        info!("Using in-memory database");
+        Arc::new(InMemoryStore::new())
+    };
 
     store
 }

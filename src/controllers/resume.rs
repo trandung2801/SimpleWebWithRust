@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tracing::{event, instrument, Level};
 use warp::http::StatusCode;
 use crate::service::convert_to_json::{Data, PayloadNoData, PayloadWithData};
-use crate::middleware::jwt::Claims;
+use crate::service::jwt::Claims;
 use crate::models::job::JobId;
 use crate::models::pagination::{Pagination, PaginationForJob, PaginationMethods};
 use crate::models::resume::{NewResume, ResumeId, Resume};
