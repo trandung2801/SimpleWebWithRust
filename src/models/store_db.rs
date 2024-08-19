@@ -26,11 +26,12 @@ impl DatabaseStore {
             Ok(pool) => pool,
             Err(e) => panic!("Couldn't establish DB connection: {}", e),
         };
-
         DatabaseStore {
             connection: db_pool,
         }
     }
+
+    // pub async fn check_db(pg_pool: PgPool)
 }
 
 #[async_trait]

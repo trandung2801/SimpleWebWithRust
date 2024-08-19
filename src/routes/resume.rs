@@ -84,3 +84,6 @@ pub fn resume_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send 
         .or(update_resume_api)
         .or(delete_resume_api)
 }
+// #[cfg(test)]
+// #[path = "../tests/route_resume.rs"]
+// mod route_resume_tests;

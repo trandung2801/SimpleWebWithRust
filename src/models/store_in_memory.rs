@@ -38,6 +38,14 @@ impl InMemoryStore {
             resumes: Default::default(),
             map_resume_job: Default::default()
         }
+        // InMemoryStore {
+        //     users: Default::default(),
+        //     roles: Default::default(),
+        //     companies: Default::default(),
+        //     jobs: Default::default(),
+        //     resumes: Default::default(),
+        //     map_resume_job: Default::default()
+        // }
     }
 }
 

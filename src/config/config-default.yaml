@@ -1,13 +1,15 @@
 
 log_level: "info"
+service_name: "rust-api-service"
 server:
   host: "127.0.0.1"
   port: 3030
+  jeager_port: 4317
 
 #default value in project is postgres database
 #if database none or database: "in-memory" to set value is in-memory
-#database: "postgres"
-database: "in-memory"
+database: "postgres"
+#database: "in-memory"
 postgres:
   db_user: "postgres"
   db_password: "123456"

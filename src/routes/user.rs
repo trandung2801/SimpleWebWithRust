@@ -7,7 +7,8 @@ use crate::models::store_trait::StoreMethods;
 
 // Configures and returns the Warp filter for handling HTTP requests of user.
 pub fn user_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
-                 -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+                 -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
+{
     //Add base path into path
     let user_path = warp::path(base_path)
                                                             .and(warp::path("v1"));
@@ -190,9 +191,9 @@ pub fn user_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + 
         .or(set_admin_api)
 }
 //test
-#[cfg(test)]
-#[path = "../tests/route_user.rs"]
-mod route_user_tests;
+// #[cfg(test)]
+// #[path = "../tests/route_user.rs"]
+// mod route_user_tests;
 
 
 

@@ -1,5 +1,5 @@
 [package]
-name = "backend"
+name = "rust-api-service"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,8 +10,10 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 tokio = { version = "1.1.1", features = ["full"] }
-tracing = { version = "0.1", features = ["log"] }
-tracing-subscriber = "0.2"
+tracing = { version = "0.1.40", features = ["log"] }
+tracing-bunyan-formatter = { version = "0.3.9" }
+tracing-opentelemetry = { version = "0.25.0" }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 sqlx = { version = "0.5", features = [ "runtime-tokio-rustls", "migrate", "postgres" ] }
 rand = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
@@ -25,3 +27,9 @@ jsonwebtoken = "9.3.0"
 config = "0.14.0"
 futures-util = "0.3"
 async-trait = "0.1.81"
+
+openssl = { version = "0.10.66" }
+opentelemetry = { version = "0.24.0" }
+opentelemetry-otlp = { version = "0.17.0", features = ["tonic"] }
+opentelemetry-semantic-conventions = { version = "0.16.0" }
+opentelemetry_sdk = { version = "0.24.1", features = ["rt-tokio"] }

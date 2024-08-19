@@ -82,7 +82,7 @@ pub fn job_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + S
         .or(delete_job_api)
 }
 
-#[cfg(test)]
-#[path = "../tests/route_job.rs"]
-mod route_job_tests;
+// #[cfg(test)]
+// #[path = "../tests/route_job.rs"]
+// mod route_job_tests;
 

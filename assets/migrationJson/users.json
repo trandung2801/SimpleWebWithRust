@@ -1,0 +1,58 @@
+{
+  "1":{
+    "id": 1,
+    "email": "admin@gmail.com",
+    "company_id": 0,
+    "role_id": 1,
+    "is_delete": false
+  },
+  "2":{
+    "id": 2,
+    "email": "admin1@gmail.com",
+    "company_id": 0,
+    "role_id": 1,
+    "is_delete": false
+  },
+  "3":{
+    "id": 3,
+    "email": "hr1@gmail.com",
+    "company_id": 1,
+    "role_id": 3,
+    "is_delete": false
+  },
+  "4":{
+    "id": 4,
+    "email": "hr2@gmail.com",
+    "company_id": 1,
+    "role_id": 3,
+    "is_delete": false
+  },
+  "5":{
+    "id": 5,
+    "email": "hr3@gmail.com",
+    "company_id": 1,
+    "role_id": 3,
+    "is_delete": false
+  },
+  "6":{
+    "id": 6,
+    "email": "user1@gmail.com",
+    "company_id": 0,
+    "role_id": 2,
+    "is_delete": false
+  },
+  "7":{
+    "id": 7,
+    "email": "user2@gmail.com",
+    "company_id": 0,
+    "role_id": 2,
+    "is_delete": false
+  },
+  "8":{
+    "id": 8,
+    "email": "user3@gmail.com",
+    "company_id": 0,
+    "role_id": 2,
+    "is_delete": false
+  }
+}
