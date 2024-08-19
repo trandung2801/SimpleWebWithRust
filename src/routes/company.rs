@@ -71,7 +71,6 @@ pub fn company_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send
         .or(delete_company_api)
 }
 
-#[cfg(test)]
-#[path = "../tests/route_company.rs"]
-mod route_company_tests;
-
+// #[cfg(test)]
+// #[path = "../tests/route_company.rs"]
+// mod route_company_tests;

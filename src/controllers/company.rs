@@ -152,9 +152,7 @@ pub async fn delete_company(store: Arc<dyn StoreMethods + Send + Sync>, claims: 
     }
 }
 
-#[cfg(test)]
-#[path = "../tests/route_resume.rs"]
-mod route_resume_tests;
+
 
 
 

@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use clap::Parser;
+use clap::{Parser};
 use config::{Config as ConfigLoader, File, FileFormat};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -21,12 +21,15 @@ pub struct Server{
     // Which HOST the server is listening to
     pub host: String,
     // Which PORT the server is listening to
-    pub port: u16
+    pub port: u16,
+    // Which PORT the server jeager collection is listening to
+    pub jeager_port: u16
 }
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config{
     // Which errors we want to log (info, warn or error)
     pub log_level: String,
+    pub service_name: String,
     pub server: Server,
     pub database: Option<String>,
     pub postgres: PostgresConfig,
@@ -35,7 +38,7 @@ pub struct Config{
 #[derive(Parser, Debug)]
 pub struct Args {
     // Config file
-    #[clap(long, default_value = "src/config/config-default.yaml")]
+    #[clap(short, long, default_value = "src/config/config-default.yaml")]
     pub config_path: String,
 }
 
