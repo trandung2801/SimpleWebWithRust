@@ -36,7 +36,8 @@ impl DatabaseStore {
 
 #[async_trait]
 impl StoreMethods for DatabaseStore {
-    async fn create_map_job_resume(&self, new_map_resume_job: NewMapResumeJob) -> Result<MapResumeJob, Error>
+    async fn create_map_job_resume(&self, new_map_resume_job: NewMapResumeJob)
+        -> Result<MapResumeJob, Error>
     {
         match sqlx::query("INSERT INTO map_resume_job (resume_id, job_id) \
                             VALUES ($1, $2)\
@@ -58,7 +59,8 @@ impl StoreMethods for DatabaseStore {
             }
         }
     }
-    async fn get_list_job_by_resume(&self, resume_id: ResumeId) -> Result<Vec<MapResumeJob>, Error>
+    async fn get_list_job_by_resume(&self, resume_id: ResumeId)
+        -> Result<Vec<MapResumeJob>, Error>
     {
         match sqlx::query("SELECT * FROM map_resume_job where resume_id = $1")
             .bind(resume_id.0)

@@ -23,8 +23,9 @@ pub struct Server{
     // Which PORT the server is listening to
     pub port: u16,
     // Which PORT the server jeager collection is listening to
-    pub jeager_port: u16
+    pub jaeger_port: u16
 }
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config{
     // Which errors we want to log (info, warn or error)
@@ -38,7 +39,7 @@ pub struct Config{
 #[derive(Parser, Debug)]
 pub struct Args {
     // Config file
-    #[clap(short, long, default_value = "src/config/config-default.yaml")]
+    #[clap(short, long, default_value = "config-default.yaml")]
     pub config_path: String,
 }
 

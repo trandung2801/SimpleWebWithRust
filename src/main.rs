@@ -35,7 +35,7 @@ async fn main() {
     init_telemetry(
         config.service_name.as_str(),
         config.server.host.as_str(),
-        &config.server.jeager_port,
+        &config.server.jaeger_port,
         log_filter.as_str()
     );
 
