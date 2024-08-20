@@ -21,15 +21,46 @@ rust-argon2 = "1.0"
 chrono = "0.4.19"
 dotenv = "0.15.0"
 clap = { version = "3.1.7", features = ["derive"] }
-proc-macro2 = "1.0.37"
+proc-macro2 = "1.0"
 regex = { version = "1", features = ["unicode-case"] }
 jsonwebtoken = "9.3.0"
 config = "0.14.0"
 futures-util = "0.3"
 async-trait = "0.1.81"
 
-openssl = { version = "0.10.66" }
+#openssl = { version = "0.10.66" }
+openssl = { version = "0.10", features = ["vendored"] }
 opentelemetry = { version = "0.24.0" }
 opentelemetry-otlp = { version = "0.17.0", features = ["tonic"] }
 opentelemetry-semantic-conventions = { version = "0.16.0" }
 opentelemetry_sdk = { version = "0.24.1", features = ["rt-tokio"] }
+
+[profile.dev]
+# Development profile settings (default is used if not specified)
+opt-level = 0
+debug = true
+split-debuginfo = '...'  # Platform-specific.
+strip = "none"
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256
+rpath = false
+
+[profile.release]
+# Release profile settings
+opt-level = 3
+debug = false
+split-debuginfo = '...'  # Platform-specific.
+strip = "none"
+debug-assertions = false
+overflow-checks = false
+lto = false
+panic = 'unwind'
+incremental = false
+codegen-units = 16
+rpath = false
+
+

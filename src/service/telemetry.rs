@@ -15,7 +15,7 @@ use tracing_subscriber::{EnvFilter, Registry};
 //
 // * `service_name` - A string slice representing the name of the service.
 // * `server_host` - A string slice representing the host of the exporter.
-// * `server_jeager_port` - A string slice representing the port of jeager listening.
+// * `server_jaeger_port` - A string slice representing the port of jaeger listening.
 // * `log_level` - A string slice representing the level of log.
 //
 // # Panics
@@ -23,11 +23,11 @@ use tracing_subscriber::{EnvFilter, Registry};
 // This function will panic if it fails to initialize the tracer.
 //
 
-pub fn init_telemetry(service_name: &str, server_host: &str, server_jeager_port: &u16, log_level: &str) {
+pub fn init_telemetry(service_name: &str, server_host: &str, server_jaeger_port: &u16, log_level: &str) {
     // Create a gRPC exporter
     let exporter = opentelemetry_otlp::new_exporter()
         .tonic()
-        .with_endpoint(format!("http://{}:{}", server_host, server_jeager_port));
+        .with_endpoint(format!("http://{}:{}", server_host, server_jaeger_port));
 
     // Define a tracer
     let tracer = opentelemetry_otlp::new_pipeline()
