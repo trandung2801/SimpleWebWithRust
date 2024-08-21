@@ -5,7 +5,7 @@ use warp:: {
     Filter
 };
 use tracing::{event, Level};
-use handle_errors::Error;
+use crate::service::handle_errors::Error;
 use crate::service::jwt::{Jwt, Claims, JwtActions};
 
 const BEARER: &str = "Bearer";

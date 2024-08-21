@@ -5,7 +5,6 @@ use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
 use tokio::sync::{oneshot, oneshot::Sender};
 use tracing::{info, instrument};
-use handle_errors::{Error, return_error};
 use routes::user::user_route;
 use crate::config::config::Config;
 use crate::models::store_db::DatabaseStore;
@@ -15,6 +14,7 @@ use crate::routes::company::company_route;
 use crate::routes::job::job_route;
 use crate::routes::resume::resume_route;
 use crate::service::telemetry::init_telemetry;
+use crate::service::handle_errors::{Error, return_error};
 
 mod models;
 mod routes;

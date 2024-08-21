@@ -1,6 +1,6 @@
 use std::fmt;
 use async_trait::async_trait;
-use handle_errors::Error;
+use crate::service::handle_errors::Error;
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::job::{Job, JobId, NewJob};
 use crate::models::map_resume_job::{MapResumeJob, NewMapResumeJob};

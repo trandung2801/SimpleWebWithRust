@@ -1,7 +1,7 @@
 use chrono::Utc;
 use jsonwebtoken::{Algorithm, decode, DecodingKey, encode, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use handle_errors::{Error};
+use crate::service::handle_errors::Error;
 use tracing::{event, Level};
 use crate::models::role::RoleId;
 use crate::models::user::{User, UserId};
