@@ -4,7 +4,7 @@ use sqlx::{
 };
 use tracing::{event, Level};
 use async_trait::async_trait;
-use handle_errors::Error;
+use crate::service::handle_errors::Error;
 use crate::models::map_resume_job::{MapResumeJob, MapResumeJobId, NewMapResumeJob};
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
 use crate::models::role::{RoleInfo, RoleId, Role, USER_ROLE_ID};
