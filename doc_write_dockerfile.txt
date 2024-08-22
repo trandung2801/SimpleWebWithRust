@@ -118,7 +118,7 @@ cho image chính bắt buộc phải có.
 ##### VOLUME key value
     - volume sẽ không bị xoá nếu container bị xoá mà chỉ có thể bị xoá khi chúng ta xoá chúng
     - Chia sẻ file từ host vào container
-    - Container build on image, containner map with container, data of container store in volume
+    - Container build on image, container map with container, data of container store in volume
         and volume store data which by share file from host into volume
         Now, if you edit file in host => data in volume will update and data in container with
         merge with new data in volume and will update auto.

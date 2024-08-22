@@ -1,0 +1,37 @@
+version: "3.7"
+name: "rust-api-service"
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    restart: always
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_OTLP_HTTP_PORT=4317
+      - LOG_LEVEL=INFO
+    ports:
+      - '16686:16686'
+      - '4317:4317'
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - PGDATA=/data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - '5432:5432'
+  rust_api_service:
+    restart: always
+    image: rust-api-service
+    environment:
+      - RUST_LOG=debug
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3030:3030'
+volumes:
+  postgres:

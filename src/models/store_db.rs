@@ -1,3 +1,4 @@
+use std::time::Duration;
 use sqlx::{
     postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
@@ -20,18 +21,17 @@ pub struct DatabaseStore {
 impl DatabaseStore {
     pub async fn new(db_url: &str) -> Self {
         let db_pool = match PgPoolOptions::new()
-            .max_connections(5)
+            .max_connections(100)
+            // .connect_timeout(Duration::from_secs(60))
             .connect(db_url)
             .await {
             Ok(pool) => pool,
-            Err(e) => panic!("Couldn't establish DB connection: {}", e),
+            Err(e) => panic!("Couldn't establish DB connection: {} with url {}", e, db_url),
         };
         DatabaseStore {
             connection: db_pool,
         }
     }
-
-    // pub async fn check_db(pg_pool: PgPool)
 }
 
 #[async_trait]

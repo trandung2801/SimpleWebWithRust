@@ -1,7 +1,5 @@
 #![warn(clippy::all)]
 use std::sync::Arc;
-use rand::distributions::uniform::SampleBorrow;
-use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
 use tokio::sync::{oneshot, oneshot::Sender};
 use tracing::{info, instrument};

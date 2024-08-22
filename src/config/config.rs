@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use clap::{Parser};
 use config::{Config as ConfigLoader, File, FileFormat};
+use tracing::log::info;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct PostgresConfig{
