@@ -23,7 +23,12 @@ use tracing_subscriber::{EnvFilter, Registry};
 // This function will panic if it fails to initialize the tracer.
 //
 
-pub fn init_telemetry(service_name: &str, server_host: &str, server_jaeger_port: &u16, log_level: &str) {
+pub fn init_telemetry(
+    service_name: &str,
+    server_host: &str,
+    server_jaeger_port: &u16,
+    log_level: &str,
+) {
     // Create a gRPC exporter
     let exporter = opentelemetry_otlp::new_exporter()
         .tonic()

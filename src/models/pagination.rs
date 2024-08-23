@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::service::handle_errors::Error;
+use std::collections::HashMap;
 
 /// Pagination struct which is getting extract
 /// from query params
@@ -52,9 +52,8 @@ pub trait PaginationMethods {
     fn extract_pagination_job(params: HashMap<String, String>) -> Result<PaginationForJob, Error>;
 }
 
-impl PaginationMethods for  Pagination {
-    fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error>
-    {
+impl PaginationMethods for Pagination {
+    fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
         // Could be improved in the future
         if params.contains_key("limit") && params.contains_key("offset") {
             return Ok(Pagination {
@@ -77,10 +76,12 @@ impl PaginationMethods for  Pagination {
         Err(Error::MissingParameters)
     }
 
-    fn extract_pagination_job(params: HashMap<String, String>) -> Result<PaginationForJob, Error>
-    {
+    fn extract_pagination_job(params: HashMap<String, String>) -> Result<PaginationForJob, Error> {
         // Could be improved in the future
-        if params.contains_key("limit") && params.contains_key("offset") && params.contains_key("jobId") {
+        if params.contains_key("limit")
+            && params.contains_key("offset")
+            && params.contains_key("jobId")
+        {
             return Ok(PaginationForJob {
                 // Takes the "limit" parameter in the query and tries to convert it to a number
                 limit: Some(

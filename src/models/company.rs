@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Company {
     pub id: Option<CompanyId>,
@@ -8,7 +7,7 @@ pub struct Company {
     pub email: String,
     pub address: String,
     pub description: String,
-    pub is_delete: bool
+    pub is_delete: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]

@@ -1,10 +1,10 @@
-pub mod user;
 pub mod company;
-pub mod store_db;
-pub mod resume;
-pub mod role;
 pub mod job;
 pub mod map_resume_job;
 pub mod pagination;
-pub mod store_trait;
+pub mod resume;
+pub mod role;
+pub mod store_db;
 pub mod store_in_memory;
+pub mod store_trait;
+pub mod user;

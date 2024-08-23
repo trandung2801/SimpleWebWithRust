@@ -1,10 +1,9 @@
-use serde::Deserialize;
-use clap::{Parser};
+use clap::Parser;
 use config::{Config as ConfigLoader, File, FileFormat};
-use tracing::log::info;
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct PostgresConfig{
+pub struct PostgresConfig {
     // Database user
     pub db_user: String,
     // Database user
@@ -18,17 +17,17 @@ pub struct PostgresConfig{
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Server{
+pub struct Server {
     // Which HOST the server is listening to
     pub host: String,
     // Which PORT the server is listening to
     pub port: u16,
     // Which PORT the server jeager collection is listening to
-    pub jaeger_port: u16
+    pub jaeger_port: u16,
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Config{
+pub struct Config {
     // Which errors we want to log (info, warn or error)
     pub log_level: String,
     pub service_name: String,

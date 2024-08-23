@@ -1,14 +1,17 @@
-use std::sync::Arc;
-use crate::models::store_trait::StoreMethods;
-use warp::{Filter};
-use crate::controllers::job::{apply_job, create_job, delete_job, get_job, get_list_job, update_job};
+use crate::controllers::job::{
+    apply_job, create_job, delete_job, get_job, get_list_job, update_job,
+};
 use crate::middleware::authen::auth;
 use crate::models::role::{HR_ROLE_ID, USER_ROLE_ID};
+use crate::models::store_trait::StoreMethods;
+use std::sync::Arc;
+use warp::Filter;
 
 // Configures and returns the Warp filter for handling HTTP requests of job
-pub fn job_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
-                 -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
-{
+pub fn job_route(
+    base_path: &'static str,
+    store: Arc<dyn StoreMethods + Send + Sync>,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     //Add base path into path
     let job_path = warp::path(base_path)
         .and(warp::path("v1"))
@@ -85,4 +88,3 @@ pub fn job_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + S
 // #[cfg(test)]
 // #[path = "../tests/route_job.rs"]
 // mod route_job_tests;
-

@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::models::company::CompanyId;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Job {
@@ -11,7 +11,7 @@ pub struct Job {
     pub salary: i32,
     pub job_level: String,
     pub description: String,
-    pub is_delete: bool
+    pub is_delete: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
