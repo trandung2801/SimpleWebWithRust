@@ -23,7 +23,7 @@ RUN mv target/${CARGO_BUILD_TARGET}/release /out
 #Stage 4: Run with small image
 FROM scratch
 WORKDIR /user
-COPY config-default.yaml config-default.yaml
-COPY --from=builder /out/rust-api-service ./
+COPY config-default-docker.toml config-default-docker.toml
+COPY --from=builder /out/rust-api-service .
 
-CMD ["/user/rust-api-service"]
+CMD ["/user/rust-api-service", "--config-path=config-default-docker.toml"]

@@ -113,7 +113,6 @@ pub async fn login(
             }
             Err(e) => Err(warp::reject::custom(Error::ArgonLibraryError(e))),
         },
-        // TODO: Maybe fail when handle error
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
@@ -139,7 +138,6 @@ pub async fn get_user_by_id(
                 StatusCode::OK,
             ))
         }
-        // TODO: Maybe fail when handle error
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
@@ -181,7 +179,6 @@ pub async fn get_list_users(
                 StatusCode::OK,
             ))
         }
-        // TODO: Maybe fail when handle error
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
@@ -213,7 +210,6 @@ pub async fn update_user(
                 StatusCode::OK,
             ))
         }
-        // TODO: Maybe fail when handle error
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
