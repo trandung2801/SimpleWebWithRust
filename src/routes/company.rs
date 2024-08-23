@@ -1,18 +1,21 @@
-use std::sync::Arc;
-use warp::{Filter};
+use crate::controllers::company::{
+    create_company, delete_company, get_company, get_list_company, update_company,
+};
 use crate::middleware::authen::auth;
-use crate::models::store_trait::StoreMethods;
-use crate::controllers::company::{create_company, delete_company, get_company, get_list_company, update_company};
 use crate::models::role::ADMIN_ROLE_ID;
+use crate::models::store_trait::StoreMethods;
+use std::sync::Arc;
+use warp::Filter;
 
 // Configures and returns the Warp filter for handling HTTP requests of company
-pub fn company_route(base_path: &'static str, store: Arc<dyn StoreMethods + Send + Sync>)
-                     -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
-{
+pub fn company_route(
+    base_path: &'static str,
+    store: Arc<dyn StoreMethods + Send + Sync>,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     //Add base path into path
     let company_path = warp::path(base_path)
-                                                    .and(warp::path("v1"))
-                                                    .and(warp::path("company"));
+        .and(warp::path("v1"))
+        .and(warp::path("company"));
     //Configures store filter
     let store_filter = warp::any().map(move || store.clone());
 

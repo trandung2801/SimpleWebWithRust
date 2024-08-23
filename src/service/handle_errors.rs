@@ -1,12 +1,12 @@
+use argon2::Error as ArgonError;
 use std::str::Utf8Error;
+use tracing::{event, Level};
 use warp::{
     filters::{body::BodyDeserializeError, cors::CorsForbidden},
     http::StatusCode,
     reject::Reject,
     Rejection, Reply,
 };
-use tracing::{event, Level};
-use argon2::Error as ArgonError;
 
 #[derive(Debug)]
 pub enum Error {
@@ -30,14 +30,11 @@ pub enum Error {
     Utf8Error(Utf8Error),
     MissingBearerAuthType,
 
-
     ParseError(std::num::ParseIntError),
     MigrationError(sqlx::migrate::MigrateError),
     LoadConfigErr(serde_yaml::Error),
     MissingParameters,
-
 }
-
 
 #[derive(Debug, Clone)]
 pub struct APILayerError {
@@ -73,7 +70,6 @@ impl std::fmt::Display for Error {
             Error::MissingParameters => write!(f, "Missing parameter"),
             Error::MigrationError(_) => write!(f, "Can't migrate data"),
             Error::LoadConfigErr(err) => write!(f, "Load config error: {}", err),
-
         }
     }
 }
@@ -101,13 +97,11 @@ pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
                         StatusCode::UNPROCESSABLE_ENTITY,
                     ))
                 }
-            },
-            _ => {
-                Ok(warp::reply::with_status(
-                    "Not Found".to_string(),
-                    StatusCode::NOT_FOUND,
-                ))
             }
+            _ => Ok(warp::reply::with_status(
+                "Not Found".to_string(),
+                StatusCode::NOT_FOUND,
+            )),
         }
     } else if let Some(Error::NotFound) = r.find() {
         Ok(warp::reply::with_status(

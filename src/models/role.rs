@@ -7,7 +7,7 @@ pub const HR_ROLE_ID: i32 = 3;
 pub struct Role {
     pub id: Option<RoleId>,
     pub role: String,
-    pub is_delete: bool
+    pub is_delete: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -16,5 +16,5 @@ pub struct RoleId(pub i32);
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RoleInfo {
     pub role: String,
-    pub is_delete: bool
+    pub is_delete: bool,
 }

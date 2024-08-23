@@ -1,10 +1,10 @@
-use serde::{Deserialize, Serialize};
-use crate::models::company::{Company};
-use crate::models::job::{Job};
+use crate::models::company::Company;
+use crate::models::job::Job;
 use crate::models::map_resume_job::MapResumeJob;
-use crate::models::resume::{Resume};
-use crate::models::role::{Role};
+use crate::models::resume::Resume;
+use crate::models::role::Role;
 use crate::models::user::UserInfo;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub enum Data {
@@ -25,7 +25,7 @@ pub enum Data {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PayloadWithData {
     pub message: String,
-    pub data: Data
+    pub data: Data,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -33,8 +33,8 @@ pub struct PayloadNoData {
     pub message: String,
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct PayloadForLogin{
+pub struct PayloadForLogin {
     pub message: String,
     pub access_token: String,
-    pub data: Data
+    pub data: Data,
 }

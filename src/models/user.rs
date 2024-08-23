@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::models::company::CompanyId;
 use crate::models::role::RoleId;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct User {
@@ -9,7 +9,7 @@ pub struct User {
     pub password: String,
     pub company_id: CompanyId,
     pub role_id: RoleId,
-    pub is_delete: bool
+    pub is_delete: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -23,7 +23,7 @@ pub struct UserInfo {
     pub email: String,
     pub company_id: CompanyId,
     pub role_id: RoleId,
-    pub is_delete: bool
+    pub is_delete: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
