@@ -644,7 +644,7 @@ pub async fn get_user_test() {
 pub async fn get_list_user_test() {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/user/listUser")
+        .get("http://localhost:3030/api/v1/user/listUser?limit=10&offset=0")
         .send()
         .await
         .unwrap();
@@ -761,7 +761,7 @@ pub async fn get_company_test() {
 pub async fn get_list_company_test() {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/company/listCompany")
+        .get("http://localhost:3030/api/v1/company/listCompany?limit=10&offset=0")
         .send()
         .await
         .unwrap();
