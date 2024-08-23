@@ -57,8 +57,8 @@ jobs:
           --health-timeout=30s
           --health-retries=5
 
-      env:
-        DATABASE_URL: postgres://postgres:123456@localhost:5432/postgres
+#      env:
+#        DATABASE_URL: postgres://postgres:123456@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v4
       - uses: arduino/setup-protoc@v3
