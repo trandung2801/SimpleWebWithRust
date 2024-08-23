@@ -25,7 +25,7 @@ mod tests;
 #[tokio::main]
 #[instrument]
 async fn main() {
-    let config = Config::new().expect("Config env not set");
+    let config = Config::new().expect("Config env not set ");
     let log_filter = format!(
         "handle_errors={},rust-api-service={},warp={}",
         config.log_level, config.log_level, config.log_level
