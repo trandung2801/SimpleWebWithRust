@@ -64,7 +64,7 @@ impl StoreMethods for DatabaseStore {
                     "Create map_job_resume from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -89,7 +89,7 @@ impl StoreMethods for DatabaseStore {
                     "Get list job by resume id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -118,7 +118,7 @@ impl StoreMethods for DatabaseStore {
                     "Get list job by job id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -149,7 +149,7 @@ impl StoreMethods for DatabaseStore {
             Ok(user) => Ok(user),
             Err(e) => {
                 event!(Level::ERROR, "Create user for database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -174,7 +174,7 @@ impl StoreMethods for DatabaseStore {
                     "Get user by email from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -200,7 +200,7 @@ impl StoreMethods for DatabaseStore {
                     "Get user by id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -227,7 +227,7 @@ impl StoreMethods for DatabaseStore {
                     "Get list user from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -254,7 +254,7 @@ impl StoreMethods for DatabaseStore {
             Ok(user) => Ok(user),
             Err(e) => {
                 event!(Level::ERROR, "Update user from database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -285,7 +285,7 @@ impl StoreMethods for DatabaseStore {
                     "Update password for user from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -316,7 +316,7 @@ impl StoreMethods for DatabaseStore {
                     "Set role for user from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -335,7 +335,7 @@ impl StoreMethods for DatabaseStore {
                     "Delete user by id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -359,7 +359,7 @@ impl StoreMethods for DatabaseStore {
             Ok(role) => Ok(role),
             Err(e) => {
                 event!(Level::ERROR, "Create role for database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -382,7 +382,7 @@ impl StoreMethods for DatabaseStore {
                     "Get role by id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -404,7 +404,7 @@ impl StoreMethods for DatabaseStore {
                     "Get list role from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -428,7 +428,7 @@ impl StoreMethods for DatabaseStore {
             Ok(role) => Ok(role),
             Err(e) => {
                 event!(Level::ERROR, "Update role from database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -443,7 +443,7 @@ impl StoreMethods for DatabaseStore {
             Ok(_) => Ok(true),
             Err(e) => {
                 event!(Level::ERROR, "Delete role from database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -477,7 +477,7 @@ impl StoreMethods for DatabaseStore {
                     "Create company for database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -503,7 +503,7 @@ impl StoreMethods for DatabaseStore {
                     "Get company by email from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -529,7 +529,7 @@ impl StoreMethods for DatabaseStore {
                     "Get company by id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -560,7 +560,7 @@ impl StoreMethods for DatabaseStore {
                     "Get list company from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -595,7 +595,7 @@ impl StoreMethods for DatabaseStore {
                     "Update company from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -614,7 +614,7 @@ impl StoreMethods for DatabaseStore {
                     "Delete company from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -652,7 +652,7 @@ impl StoreMethods for DatabaseStore {
             Ok(resume) => Ok(resume),
             Err(e) => {
                 event!(Level::ERROR, "Create job for database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -677,7 +677,7 @@ impl StoreMethods for DatabaseStore {
             Ok(job) => Ok(job),
             Err(e) => {
                 event!(Level::ERROR, "Create job from database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -707,7 +707,7 @@ impl StoreMethods for DatabaseStore {
                     "Get job by id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -746,7 +746,7 @@ impl StoreMethods for DatabaseStore {
             Ok(job) => Ok(job),
             Err(e) => {
                 event!(Level::ERROR, "Update job from database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -761,7 +761,7 @@ impl StoreMethods for DatabaseStore {
             Ok(_) => Ok(true),
             Err(e) => {
                 event!(Level::ERROR, "Delete job from database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -793,7 +793,7 @@ impl StoreMethods for DatabaseStore {
                     "Create resume for database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -814,7 +814,7 @@ impl StoreMethods for DatabaseStore {
             Ok(resume) => Ok(resume),
             Err(e) => {
                 event!(Level::ERROR, "Get resume from database has error: {:?}", e);
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -849,7 +849,7 @@ impl StoreMethods for DatabaseStore {
                     "Get list resume by user id from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -879,7 +879,7 @@ impl StoreMethods for DatabaseStore {
                     "Update resume from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }
@@ -898,7 +898,7 @@ impl StoreMethods for DatabaseStore {
                     "Delete resume from database has error: {:?}",
                     e
                 );
-                Err(Error::DatabaseQueryError(e))
+                Err(Error::DatabaseQuery(e))
             }
         }
     }

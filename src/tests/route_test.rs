@@ -1,4 +1,4 @@
-use crate::config::config::Config;
+use crate::configs::config::Config;
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::job::{Job, JobId, NewJob};
 use crate::models::resume::{NewResume, Resume, ResumeId};

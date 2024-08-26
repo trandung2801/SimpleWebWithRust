@@ -222,14 +222,14 @@ impl StoreMethods for InMemoryStore {
         }
     }
 
-    async fn set_role(&self, user: UserInfo, role_id: RoleId) -> Result<User, Error> {
+    async fn set_role(&self, user: UserInfo, id_role: RoleId) -> Result<User, Error> {
         let _user = self.get_user_by_email(user.email).await?;
         let user_update = User {
             id: _user.id,
             email: _user.email,
             password: _user.password,
             company_id: _user.company_id,
-            role_id: role_id,
+            role_id: id_role,
             is_delete: _user.is_delete,
         };
         match self
@@ -511,9 +511,9 @@ impl StoreMethods for InMemoryStore {
             .await
             .iter()
             .filter_map(|(_k, v)| if v.user_id == user_id { Some(v) } else { None })
-            .cloned()
             .skip(offset as usize)
             .take((limit.unwrap() - offset) as usize)
+            .cloned()
             .collect::<Vec<_>>())
     }
 

@@ -1,5 +1,4 @@
-#![warn(clippy::all)]
-use crate::config::config::Config;
+use crate::configs::config::Config;
 use crate::models::store_db::DatabaseStore;
 use crate::models::store_in_memory::InMemoryStore;
 use crate::models::store_trait::StoreMethods;
@@ -14,7 +13,7 @@ use tokio::sync::{oneshot, oneshot::Sender};
 use tracing::{info, instrument};
 use warp::{http::Method, Filter};
 
-mod config;
+mod configs;
 mod controllers;
 mod middleware;
 mod models;
@@ -38,7 +37,7 @@ async fn main() {
     );
 
     let store = build_store(&config).await;
-    let routes = build_routes(store).await;
+    let routes = build_routes(store).await.recover(return_error);
 
     let address_listen = format!("{}:{}", config.server.host, config.server.port);
     let socket: std::net::SocketAddr = address_listen.parse().expect("Not a valid address");
@@ -49,17 +48,17 @@ pub async fn build_store(config: &Config) -> Arc<dyn StoreMethods + Send + Sync>
     let url = config.postgres.url.clone();
 
     let store: Arc<dyn StoreMethods + Send + Sync> =
-        if config.database.clone().unwrap() == "in-memory".to_string() {
+        if config.database.clone().unwrap() == *"in-memory".to_string() {
             info!("Using in-memory database");
             Arc::new(InMemoryStore::new())
-        } else if config.database.clone().unwrap() == "postgres".to_string() {
+        } else if config.database.clone().unwrap() == *"postgres".to_string() {
             info!("Using postgres database");
             // set up database
             let pool = DatabaseStore::new(&url).await;
             sqlx::migrate!()
                 .run(&pool.clone().connection)
                 .await
-                .map_err(Error::MigrationError)
+                .map_err(Error::Migration)
                 .unwrap();
             Arc::new(pool)
         } else {
@@ -82,21 +81,19 @@ pub async fn build_routes(
     let company_routes = company_route("api", store.clone());
     let resume_routes = resume_route("api", store.clone());
     let job_routes = job_route("api", store.clone());
-    let routes = user_routes
+    user_routes
         .or(company_routes)
         .or(resume_routes)
         .or(job_routes)
         .with(cors)
         .with(warp::trace::request())
-        .recover(return_error);
-    routes
 }
 
 pub async fn init_mock_server(
     address_listen: String,
     store: Arc<dyn StoreMethods + Send + Sync>,
 ) -> Sender<i32> {
-    let routes = build_routes(store).await;
+    let routes = build_routes(store).await.recover(return_error);
     let (tx, rx) = oneshot::channel::<i32>();
     let socket: std::net::SocketAddr = address_listen.parse().expect("Not a valid address");
 
