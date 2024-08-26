@@ -21,18 +21,16 @@ pub async fn create_company(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     //Check valid company
     let new_email = new_company.email.clone();
-    match store.get_company_by_email(new_email).await {
-        Ok(_res) => {
-            let payload = PayloadNoData {
-                message: "Email company already exists".to_string(),
-            };
-            return Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::BAD_REQUEST,
-            ));
-        }
-        _ => (),
+    if let Ok(_res) = store.get_company_by_email(new_email).await {
+        let payload = PayloadNoData {
+            message: "Email company already exists".to_string(),
+        };
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&payload),
+            StatusCode::BAD_REQUEST,
+        ));
     }
+
     let company = NewCompany {
         email: new_company.email,
         name: new_company.name,
@@ -126,17 +124,14 @@ pub async fn update_company(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check valid company
     let email_update = company.email.clone();
-    match store.get_company_by_email(email_update).await {
-        Ok(_res) => {
-            let payload = PayloadNoData {
-                message: "Email company already exists".to_string(),
-            };
-            return Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::BAD_REQUEST,
-            ));
-        }
-        _ => (),
+    if let Ok(_res) = store.get_company_by_email(email_update).await {
+        let payload = PayloadNoData {
+            message: "Email company already exists".to_string(),
+        };
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&payload),
+            StatusCode::BAD_REQUEST,
+        ));
     }
     match store.update_company(company).await {
         Ok(res) => {

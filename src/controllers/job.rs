@@ -21,19 +21,16 @@ pub async fn create_job(
     new_job: NewJob,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check authorization create job of the user
-    match store.get_user_by_id(claims.id).await {
-        Ok(res) => {
-            if res.company_id != new_job.clone().company_id {
-                let payload = PayloadNoData {
-                    message: "Un authorization create job".to_string(),
-                };
-                return Ok(warp::reply::with_status(
-                    warp::reply::json(&payload),
-                    StatusCode::BAD_REQUEST,
-                ));
-            }
+    if let Ok(res) = store.get_user_by_id(claims.id).await {
+        if res.company_id != new_job.clone().company_id {
+            let payload = PayloadNoData {
+                message: "Un authorization create job".to_string(),
+            };
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&payload),
+                StatusCode::BAD_REQUEST,
+            ));
         }
-        _ => (),
     }
     let job = NewJob {
         job_name: new_job.job_name,
@@ -131,19 +128,16 @@ pub async fn update_job(
     job: Job,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check authorization update job of the user
-    match store.get_user_by_id(claims.id).await {
-        Ok(res) => {
-            if res.company_id != job.clone().company_id {
-                let payload = PayloadNoData {
-                    message: "Un authorization update job".to_string(),
-                };
-                return Ok(warp::reply::with_status(
-                    warp::reply::json(&payload),
-                    StatusCode::BAD_REQUEST,
-                ));
-            }
+    if let Ok(res) = store.get_user_by_id(claims.id).await {
+        if res.company_id != job.clone().company_id {
+            let payload = PayloadNoData {
+                message: "Un authorization update job".to_string(),
+            };
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&payload),
+                StatusCode::BAD_REQUEST,
+            ));
         }
-        _ => (),
     }
     match store.update_job(job).await {
         Ok(res) => {
@@ -172,37 +166,17 @@ pub async fn apply_job(
     new_map_resume_job: NewMapResumeJob,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check authorization apply job of the user
-    match store
-        .get_resume_by_id(new_map_resume_job.resume_id.clone())
-        .await
-    {
-        Ok(res) => {
-            if claims.id != res.user_id {
-                let payload = PayloadNoData {
-                    message: "Invalid user, can't apply job".to_string(),
-                };
-                return Ok(warp::reply::with_status(
-                    warp::reply::json(&payload),
-                    StatusCode::BAD_REQUEST,
-                ));
-            }
-        }
-        _ => (),
-    }
     // Check job status
-    match store.get_job_by_id(new_map_resume_job.job_id.clone()).await {
-        Ok(res) => {
-            if res.is_delete == true {
-                let payload = PayloadNoData {
-                    message: "Job was deleted, can't apply job".to_string(),
-                };
-                return Ok(warp::reply::with_status(
-                    warp::reply::json(&payload),
-                    StatusCode::BAD_REQUEST,
-                ));
-            }
+    if let Ok(res) = store.get_job_by_id(new_map_resume_job.job_id.clone()).await {
+        if res.is_delete {
+            let payload = PayloadNoData {
+                message: "Job was deleted, can't apply job".to_string(),
+            };
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&payload),
+                StatusCode::BAD_REQUEST,
+            ));
         }
-        _ => (),
     }
     match store.create_map_job_resume(new_map_resume_job).await {
         Ok(res) => {
@@ -230,17 +204,13 @@ pub async fn delete_job(
     claims: Claims,
     job: Job,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    // Check authorization delete job of the user
-    match store.get_user_by_id(claims.id).await {
-        Ok(res) => {
-            if res.company_id != job.clone().company_id {
-                return Ok(warp::reply::with_status(
-                    "Un authorization delete job".to_string(),
-                    StatusCode::BAD_REQUEST,
-                ));
-            }
+    if let Ok(res) = store.get_user_by_id(claims.id).await {
+        if res.company_id != job.clone().company_id {
+            return Ok(warp::reply::with_status(
+                "Un authorization delete job".to_string(),
+                StatusCode::BAD_REQUEST,
+            ));
         }
-        _ => (),
     }
     match store.delete_job(job.id.unwrap()).await {
         Ok(_) => Ok(warp::reply::with_status(
