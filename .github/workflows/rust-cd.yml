@@ -1,31 +1,31 @@
-name: Rust CD
-
-on:
-  workflow_run:
-    workflows: ["Rust CI"]
-    types:
-      - completed
-
-jobs:
-  setup-database:
-    name: Setup Postgres Container
-    runs-on: self-hosted
-    steps:
-      - name: Pull Postgres Image
-        run: sudo docker pull postgres:16-alpine
-      - name: Delete old container
-        run: sudo docker rm -f postgres-container || true
-      - name: Run Postgres Container
-        run: sudo docker run --name postgres-container -p 5432:5432 postgres:16-alpine
-
-  deploy-docker:
-    name: Deploy Docker Container
-    runs-on: self-hosted
-    steps:
-      - name: Pull Docker Image
-        run: sudo docker pull andrewtran2801/rust-api-service:latest
-      - name: Delete old container
-        run: sudo docker rm -f rust-api-container || true
-      - name: Run Docker Container
-        run: sudo docker run --name rust-api-container -p 3030:3030 andrewtran2801/rust-api-service:latest
-
+#name: Rust CD
+#
+#on:
+#  workflow_run:
+#    workflows: ["Rust CI"]
+#    types:
+#      - completed
+#
+#jobs:
+#  setup-database:
+#    name: Setup Postgres Container
+#    runs-on: self-hosted
+#    steps:
+#      - name: Pull Postgres Image
+#        run: sudo docker pull postgres:16-alpine
+#      - name: Delete old container
+#        run: sudo docker rm -f postgres-container || true
+#      - name: Run Postgres Container
+#        run: sudo docker run --name postgres-container -p 5432:5432 postgres:16-alpine
+#
+#  deploy-docker:
+#    name: Deploy Docker Container
+#    runs-on: self-hosted
+#    steps:
+#      - name: Pull Docker Image
+#        run: sudo docker pull andrewtran2801/rust-api-service:latest
+#      - name: Delete old container
+#        run: sudo docker rm -f rust-api-container || true
+#      - name: Run Docker Container
+#        run: sudo docker run --name rust-api-container -p 3030:3030 andrewtran2801/rust-api-service:latest
+#
