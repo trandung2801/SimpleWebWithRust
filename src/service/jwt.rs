@@ -31,8 +31,8 @@ impl JwtActions for Jwt {
     fn issue_access_token(user: User) -> Result<String, Error> {
         // Create claim for the token
         let current_date_time = Utc::now();
-        let iat = current_date_time.timestamp() as usize;
-        let exp =
+        let claim_iat = current_date_time.timestamp() as usize;
+        let claim_exp =
             (current_date_time + chrono::Duration::hours(JWT_ACCESS_TOKEN_IN)).timestamp() as usize;
         // let exp = (current_date_time + chrono::Duration::minutes(JWT_ACCESS_TOKEN_IN)).timestamp() as usize;
 
@@ -41,8 +41,8 @@ impl JwtActions for Jwt {
             email: user.email,
             role_id: user.role_id,
             is_delete: user.is_delete,
-            iat: iat,
-            exp: exp,
+            iat: claim_iat,
+            exp: claim_exp,
         };
         // Set algorithm hash for jwt token
         let header = Header::new(Algorithm::HS512);
@@ -61,7 +61,7 @@ impl JwtActions for Jwt {
 
     fn verify_access_token(token: &str) -> Result<Claims, Error> {
         match decode::<Claims>(
-            &token,
+            token,
             &DecodingKey::from_secret(JWT_ACCESS_TOKEN_SECRET),
             &Validation::new(Algorithm::HS512),
         ) {

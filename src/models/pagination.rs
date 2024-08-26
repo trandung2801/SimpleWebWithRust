@@ -58,19 +58,13 @@ impl PaginationMethods for Pagination {
         if params.contains_key("limit") && params.contains_key("offset") {
             return Ok(Pagination {
                 // Takes the "limit" parameter in the query and tries to convert it to a number
-                limit: Some(
-                    params
-                        .get("limit")
-                        .unwrap()
-                        .parse()
-                        .map_err(Error::ParseError)?,
-                ),
+                limit: Some(params.get("limit").unwrap().parse().map_err(Error::Parse)?),
                 // Takes the "offset" parameter in the query and tries to convert it to a number
                 offset: params
                     .get("offset")
                     .unwrap()
                     .parse()
-                    .map_err(Error::ParseError)?,
+                    .map_err(Error::Parse)?,
             });
         }
         Err(Error::MissingParameters)
@@ -84,25 +78,15 @@ impl PaginationMethods for Pagination {
         {
             return Ok(PaginationForJob {
                 // Takes the "limit" parameter in the query and tries to convert it to a number
-                limit: Some(
-                    params
-                        .get("limit")
-                        .unwrap()
-                        .parse()
-                        .map_err(Error::ParseError)?,
-                ),
+                limit: Some(params.get("limit").unwrap().parse().map_err(Error::Parse)?),
                 // Takes the "offset" parameter in the query and tries to convert it to a number
                 offset: params
                     .get("offset")
                     .unwrap()
                     .parse()
-                    .map_err(Error::ParseError)?,
+                    .map_err(Error::Parse)?,
                 // Takes the "jobId" parameter in the query and tries to convert it to a number
-                job_id: params
-                    .get("jobId")
-                    .unwrap()
-                    .parse()
-                    .map_err(Error::ParseError)?,
+                job_id: params.get("jobId").unwrap().parse().map_err(Error::Parse)?,
             });
         }
         Err(Error::MissingParameters)

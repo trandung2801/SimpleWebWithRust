@@ -42,17 +42,14 @@ pub async fn register(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check valid user
     let new_email = new_user.email;
-    match store.get_user_by_email(new_email.clone()).await {
-        Ok(_res) => {
-            let payload = PayloadNoData {
-                message: "Email already exists".to_string(),
-            };
-            return Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::BAD_REQUEST,
-            ));
-        }
-        _ => (),
+    if let Ok(_res) = store.get_user_by_email(new_email.clone()).await {
+        let payload = PayloadNoData {
+            message: "Email already exists".to_string(),
+        };
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&payload),
+            StatusCode::BAD_REQUEST,
+        ));
     }
     let hash_password = hash_password(new_user.password.as_bytes());
     let user = AuthInfo {
@@ -92,11 +89,11 @@ pub async fn login(
             Ok(verified) => {
                 if verified {
                     match Jwt::issue_access_token(user.clone()) {
-                        Ok(access_token) => {
+                        Ok(token) => {
                             let _user = store.get_user_by_id(user.id.unwrap()).await?;
                             let user_info = convert_user_to_user_info(_user);
                             let payload = PayloadForLogin {
-                                access_token: access_token,
+                                access_token: token,
                                 message: "Login success".to_string(),
                                 data: Data::UserInfo(user_info),
                             };
@@ -111,7 +108,7 @@ pub async fn login(
                     Err(warp::reject::custom(Error::WrongPassword))
                 }
             }
-            Err(e) => Err(warp::reject::custom(Error::ArgonLibraryError(e))),
+            Err(e) => Err(warp::reject::custom(Error::ArgonLibrary(e))),
         },
         Err(e) => Err(warp::reject::custom(e)),
     }

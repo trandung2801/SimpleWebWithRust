@@ -1,5 +1,3 @@
-use argon2::Error as ArgonError;
-use std::str::Utf8Error;
 use tracing::{event, Level};
 use warp::{
     filters::{body::BodyDeserializeError, cors::CorsForbidden},
@@ -11,7 +9,7 @@ use warp::{
 #[derive(Debug)]
 pub enum Error {
     //Error of database
-    DatabaseQueryError(sqlx::Error),
+    DatabaseQuery(sqlx::Error),
 
     //Error of In Memory
     NotFound,
@@ -21,17 +19,17 @@ pub enum Error {
     CannotEncryptToken,
 
     //Error of hash and verify password
-    ArgonLibraryError(ArgonError),
+    ArgonLibrary(argon2::Error),
     WrongPassword,
 
     //Error of authorized user and authenticated user
     Unauthorized,
     Unauthenticated,
-    Utf8Error(Utf8Error),
+    Utf8(std::str::Utf8Error),
     MissingBearerAuthType,
 
-    ParseError(std::num::ParseIntError),
-    MigrationError(sqlx::migrate::MigrateError),
+    Parse(std::num::ParseIntError),
+    Migration(sqlx::migrate::MigrateError),
     LoadConfigErr(serde_yaml::Error),
     MissingParameters,
 }
@@ -50,26 +48,26 @@ impl std::fmt::Display for APILayerError {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &*self {
-            Error::DatabaseQueryError(_) => write!(f, "Database query error, invalid data"),
+        match self {
+            Error::DatabaseQuery(_) => write!(f, "Database query error, invalid data"),
 
             Error::NotFound => write!(f, "Not found data"),
 
             Error::CannotDecryptToken => write!(f, "Can't decrypt token error"),
             Error::CannotEncryptToken => write!(f, "Can't encrypt token error"),
 
-            Error::ArgonLibraryError(_) => write!(f, "Can't verify password"),
+            Error::ArgonLibrary(_) => write!(f, "Can't verify password"),
             Error::WrongPassword => write!(f, "Wrong password"),
 
             Error::Unauthorized => write!(f, "No permission to change the underlying resource"),
             Error::Unauthenticated => write!(f, "Un authenticated"),
-            Error::Utf8Error(err) => write!(f, "Utf8 error: {}", err),
+            Error::Utf8(err) => write!(f, "Utf8 error: {}", err),
             Error::MissingBearerAuthType => write!(f, "Missing bearer auth type"),
 
-            Error::ParseError(ref err) => write!(f, "Can't parse parameter: {}", err),
+            Error::Parse(ref err) => write!(f, "Can't parse parameter: {}", err),
             Error::MissingParameters => write!(f, "Missing parameter"),
-            Error::MigrationError(_) => write!(f, "Can't migrate data"),
-            Error::LoadConfigErr(err) => write!(f, "Load config error: {}", err),
+            Error::Migration(_) => write!(f, "Can't migrate data"),
+            Error::LoadConfigErr(err) => write!(f, "Load configs error: {}", err),
         }
     }
 }
@@ -82,7 +80,7 @@ impl Reject for APILayerError {}
 const DUPLICATE_KEY: u32 = 23505;
 
 pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
-    if let Some(Error::DatabaseQueryError(e)) = r.find() {
+    if let Some(Error::DatabaseQuery(e)) = r.find() {
         event!(Level::ERROR, "Database query error");
         match e {
             sqlx::Error::Database(err) => {

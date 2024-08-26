@@ -13,7 +13,7 @@ const BEARER: &str = "Bearer";
 // Authentication
 pub fn auth(role_id: i32) -> impl Filter<Extract = (Claims,), Error = warp::Rejection> + Clone {
     headers_cloned()
-        .map(move |headers: HeaderMap<HeaderValue>| (role_id.clone(), headers))
+        .map(move |headers: HeaderMap<HeaderValue>| (role_id, headers))
         .and_then(authorize)
 }
 
@@ -35,7 +35,7 @@ async fn authorize(
         Ok(token) => match Jwt::verify_access_token(&token) {
             Ok(claims) => {
                 let current_date_time = Utc::now();
-                if claims.is_delete == true {
+                if claims.is_delete {
                     return Err(warp::reject());
                 }
                 if claims.exp < current_date_time.timestamp() as usize {
@@ -76,7 +76,7 @@ fn jwt_from_header(headers: &HeaderMap<HeaderValue>) -> Result<String, Error> {
                 "Convert header value as &[u8] to &str has error: {:?}",
                 e
             );
-            return Err(Error::Utf8Error(e));
+            return Err(Error::Utf8(e));
         }
     };
 
