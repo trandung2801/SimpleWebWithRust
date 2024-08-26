@@ -7,6 +7,17 @@ on:
       - completed
 
 jobs:
+  setup-database:
+    name: Setup Postgres Container
+    runs-on: self-hosted
+    steps:
+      - name: Pull Postgres Image
+        run: sudo docker pull postgres:16-alpine
+      - name: Delete old container
+        run: sudo docker rm -f postgres-container || true
+      - name: Run Postgres Container
+        run: sudo docker run --name postgres-container -p 5432:5432 postgres:16-alpine
+
   deploy-docker:
     name: Deploy Docker Container
     runs-on: self-hosted
