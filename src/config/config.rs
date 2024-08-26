@@ -4,16 +4,17 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct PostgresConfig {
-    // Database user
-    pub db_user: String,
-    // Database user
-    pub db_password: String,
-    // URL for the postgres database
-    pub db_host: String,
-    // PORT number for the database connection
-    pub db_port: u16,
-    // Database name
-    pub db_name: String,
+    // // Database user
+    // pub db_user: String,
+    // // Database user
+    // pub db_password: String,
+    // // URL for the postgres database
+    // pub db_host: String,
+    // // PORT number for the database connection
+    // pub db_port: u16,
+    // // Database name
+    // pub db_name: String,
+    pub url: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
