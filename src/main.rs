@@ -46,14 +46,7 @@ async fn main() {
 }
 
 pub async fn build_store(config: &Config) -> Arc<dyn StoreMethods + Send + Sync> {
-    let url = format!(
-        "postgres://{}:{}@{}:{}/{}",
-        config.postgres.db_user,
-        config.postgres.db_password,
-        config.postgres.db_host,
-        config.postgres.db_port,
-        config.postgres.db_name
-    );
+    let url = config.postgres.url.clone();
 
     let store: Arc<dyn StoreMethods + Send + Sync> =
         if config.database.clone().unwrap() == "in-memory".to_string() {
