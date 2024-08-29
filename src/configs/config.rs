@@ -19,12 +19,12 @@ pub struct Server {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
-    // Which errors we want to log (info, warn or error)
     pub log_level: String,
     pub service_name: String,
     pub server: Server,
     pub database: Option<String>,
     pub postgres: PostgresConfig,
+    pub sample_data_url: String,
 }
 
 #[derive(Parser, Debug)]

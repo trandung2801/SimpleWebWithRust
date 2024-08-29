@@ -86,6 +86,3 @@ pub fn resume_route(
         .or(update_resume_api)
         .or(delete_resume_api)
 }
-// #[cfg(test)]
-// #[path = "../tests/route_resume.rs"]
-// mod route_resume_tests;

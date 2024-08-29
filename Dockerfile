@@ -1,5 +1,5 @@
 #Stage 1: Build binary with cargo-chelf
-# Using the `rust-musl-builder` as base image, instead of
+# Using the `rust-musl-builder` as base image, instead f
 # the official Rust toolchain
 # doc: https://github.com/LukeMathWalker/cargo-chef
 FROM clux/muslrust:stable AS chef

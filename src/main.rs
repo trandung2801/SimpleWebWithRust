@@ -20,6 +20,7 @@ mod models;
 mod routes;
 mod service;
 mod tests;
+mod utils;
 
 #[tokio::main]
 #[instrument]
@@ -65,7 +66,6 @@ pub async fn build_store(config: &Config) -> Arc<dyn StoreMethods + Send + Sync>
             info!("Using in-memory database");
             Arc::new(InMemoryStore::new())
         };
-
     store
 }
 
@@ -103,4 +103,30 @@ pub async fn init_mock_server(
     });
     tokio::task::spawn(server);
     tx
+}
+
+pub async fn build_store_for_test(config: &Config) -> Arc<dyn StoreMethods + Send + Sync> {
+    let url = config.postgres.url.clone();
+
+    let store: Arc<dyn StoreMethods + Send + Sync> =
+        if config.database.clone().unwrap() == *"in-memory".to_string() {
+            info!("Using in-memory database");
+            Arc::new(InMemoryStore::new())
+        } else if config.database.clone().unwrap() == *"postgres".to_string() {
+            info!("Using postgres database");
+            // set up database
+            let pool = DatabaseStore::new(&url).await;
+
+            sqlx::migrate!()
+                .run(&pool.clone().connection)
+                .await
+                .map_err(Error::Migration)
+                .unwrap();
+            let _ = pool.create_sample_data(&config.sample_data_url).await;
+            Arc::new(pool)
+        } else {
+            info!("Using in-memory database");
+            Arc::new(InMemoryStore::new())
+        };
+    store
 }

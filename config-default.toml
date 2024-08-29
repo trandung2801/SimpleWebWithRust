@@ -1,12 +1,13 @@
-log_level="info"
-service_name="rust-api-service"
-#default value in project is postgres database
-#if database none or database: "in-memory" to set value is in-memory
-database="postgres"
+log_level = "info"
+service_name = "rust-api-service"
+sample_data_url = "migrations/postgres/sample.sql"
+#default database is postgres database
+#database is in-memory if not set database or database = "in-memory"
+database = "postgres"
 #database="in-memory"
 [postgres]
-url="postgres://postgres:123456@127.0.0.1:5432/postgres"
+url = "postgres://postgres:123456@127.0.0.1:5432/postgres"
 [server]
-host="0.0.0.0"
-port=3030
-jaeger_port=4317
+host = "0.0.0.0"
+jaeger_port = 4317
+port = 3030

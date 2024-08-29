@@ -4,8 +4,8 @@ use crate::models::job::{Job, JobId, NewJob};
 use crate::models::resume::{NewResume, Resume, ResumeId};
 use crate::models::role::{RoleId, ADMIN_ROLE_ID, HR_ROLE_ID, USER_ROLE_ID};
 use crate::models::user::{AuthInfo, UserId, UserInfo};
-use crate::service::convert_to_json::PayloadForLogin;
-use crate::{build_store, init_mock_server};
+use crate::utils::convert_to_json::PayloadForLogin;
+use crate::{build_store_for_test, init_mock_server};
 use futures_util::FutureExt;
 use tracing_subscriber::fmt::format::FmtSpan;
 
@@ -13,7 +13,7 @@ use tracing_subscriber::fmt::format::FmtSpan;
 async fn route_test() {
     let config = Config::new().expect("Config env not set");
     let address_listen = format!("{}:{}", config.server.host, config.server.port);
-    let store = build_store(&config).await;
+    let store = build_store_for_test(&config).await;
     let handler = init_mock_server(address_listen, store).await;
 
     let log_filter = format!(

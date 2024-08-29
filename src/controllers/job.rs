@@ -2,12 +2,12 @@ use crate::models::job::{Job, JobId, NewJob};
 use crate::models::map_resume_job::NewMapResumeJob;
 use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::store_trait::StoreMethods;
-use crate::service::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::service::jwt::Claims;
+use crate::utils::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use reqwest::StatusCode;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{event, instrument, Level};
+use tracing::instrument;
 
 // Handle for create job
 //
@@ -21,18 +21,17 @@ pub async fn create_job(
     new_job: NewJob,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check authorization create job of the user
-    if let Ok(res) = store.get_user_by_id(claims.id).await {
-        if res.company_id != new_job.clone().company_id {
-            let payload = PayloadNoData {
-                message: "Un authorization create job".to_string(),
-            };
-            return Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::BAD_REQUEST,
-            ));
-        }
+    let user = store.get_user_by_id(claims.id).await?;
+    if user.company_id != new_job.company_id.clone() {
+        let payload = PayloadNoData {
+            message: "Un authorization create job".to_string(),
+        };
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&payload),
+            StatusCode::BAD_REQUEST,
+        ));
     }
-    let job = NewJob {
+    let new_job = NewJob {
         job_name: new_job.job_name,
         company_id: new_job.company_id,
         location: new_job.location,
@@ -41,10 +40,10 @@ pub async fn create_job(
         job_level: new_job.job_level,
         description: new_job.description,
     };
-    match store.create_job(job).await {
+    match store.create_job(new_job).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Created Job Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Job(res),
             };
             Ok(warp::reply::with_status(
@@ -68,7 +67,7 @@ pub async fn get_job(
     match store.get_job_by_id(JobId(job_id)).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Get Job Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Job(res),
             };
             Ok(warp::reply::with_status(
@@ -94,7 +93,6 @@ pub async fn get_list_job(
     let mut pagination = Pagination::default();
 
     if !params.is_empty() {
-        event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
     // Get list jobs with pagination filters
@@ -104,7 +102,7 @@ pub async fn get_list_job(
     {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Get List Job Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::ListJob(res),
             };
             Ok(warp::reply::with_status(
@@ -129,7 +127,7 @@ pub async fn update_job(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check authorization update job of the user
     if let Ok(res) = store.get_user_by_id(claims.id).await {
-        if res.company_id != job.clone().company_id {
+        if res.company_id != job.company_id.clone() {
             let payload = PayloadNoData {
                 message: "Un authorization update job".to_string(),
             };
@@ -142,7 +140,7 @@ pub async fn update_job(
     match store.update_job(job).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Update Job Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Job(res),
             };
             Ok(warp::reply::with_status(
@@ -181,7 +179,7 @@ pub async fn apply_job(
     match store.create_map_job_resume(new_map_resume_job).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Apply Job Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::MapJobResume(res),
             };
             Ok(warp::reply::with_status(
@@ -205,7 +203,7 @@ pub async fn delete_job(
     job: Job,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     if let Ok(res) = store.get_user_by_id(claims.id).await {
-        if res.company_id != job.clone().company_id {
+        if res.company_id != job.company_id.clone() {
             return Ok(warp::reply::with_status(
                 "Un authorization delete job".to_string(),
                 StatusCode::BAD_REQUEST,

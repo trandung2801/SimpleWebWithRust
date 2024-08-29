@@ -2,14 +2,14 @@ use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::role::{RoleId, ADMIN_ROLE_ID, HR_ROLE_ID};
 use crate::models::store_trait::StoreMethods;
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
-use crate::service::convert_to_json::{Data, PayloadForLogin, PayloadNoData, PayloadWithData};
 use crate::service::handle_errors::Error;
 use crate::service::jwt::{Claims, Jwt, JwtActions};
+use crate::utils::convert_to_json::{Data, PayloadForLogin, PayloadNoData, PayloadWithData};
 use argon2::Config;
 use rand::Rng;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{event, instrument, Level};
+use tracing::instrument;
 use warp::http::StatusCode;
 
 pub fn hash_password(password: &[u8]) -> String {
@@ -60,7 +60,7 @@ pub async fn register(
         Ok(res) => {
             let user_info = convert_user_to_user_info(res);
             let payload = PayloadWithData {
-                message: "Register user success".to_string(),
+                message: "Success".to_string(),
                 data: Data::UserInfo(user_info),
             };
             Ok(warp::reply::with_status(
@@ -85,7 +85,7 @@ pub async fn login(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Login
     match store.get_user_by_email(login_info.email.clone()).await {
-        Ok(user) => match verify_password(&user.password, login_info.password.as_bytes()) {
+        Ok(user) => match verify_password(&user.hash_password, login_info.password.as_bytes()) {
             Ok(verified) => {
                 if verified {
                     match Jwt::issue_access_token(user.clone()) {
@@ -94,7 +94,7 @@ pub async fn login(
                             let user_info = convert_user_to_user_info(_user);
                             let payload = PayloadForLogin {
                                 access_token: token,
-                                message: "Login success".to_string(),
+                                message: "Success".to_string(),
                                 data: Data::UserInfo(user_info),
                             };
                             Ok(warp::reply::with_status(
@@ -127,7 +127,7 @@ pub async fn get_user_by_id(
         Ok(res) => {
             let user_info = convert_user_to_user_info(res);
             let payload = PayloadWithData {
-                message: "Get user success".to_string(),
+                message: "Success".to_string(),
                 data: Data::UserInfo(user_info),
             };
             Ok(warp::reply::with_status(
@@ -153,7 +153,6 @@ pub async fn get_list_users(
     let mut pagination = Pagination::default();
 
     if !params.is_empty() {
-        event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
     // Get list users with pagination filters
@@ -168,7 +167,7 @@ pub async fn get_list_users(
                 list_user_info.push(user_info);
             }
             let payload = PayloadWithData {
-                message: "Get list user success".to_string(),
+                message: "Success".to_string(),
                 data: Data::ListUserInfo(list_user_info),
             };
             Ok(warp::reply::with_status(
@@ -199,7 +198,7 @@ pub async fn update_user(
         Ok(res) => {
             let user_info = convert_user_to_user_info(res);
             let payload = PayloadWithData {
-                message: "Update user success".to_string(),
+                message: "Success".to_string(),
                 data: Data::UserInfo(user_info),
             };
             Ok(warp::reply::with_status(
@@ -235,7 +234,7 @@ pub async fn update_password(
         Ok(res) => {
             let user_info = convert_user_to_user_info(res);
             let payload = PayloadWithData {
-                message: "Update password success".to_string(),
+                message: "Success".to_string(),
                 data: Data::UserInfo(user_info),
             };
             Ok(warp::reply::with_status(
@@ -262,7 +261,7 @@ pub async fn set_admin_role(
         Ok(res) => {
             let user_info = convert_user_to_user_info(res);
             let payload = PayloadWithData {
-                message: "Update user success".to_string(),
+                message: "Success".to_string(),
                 data: Data::UserInfo(user_info),
             };
             Ok(warp::reply::with_status(
@@ -284,7 +283,7 @@ pub async fn set_hr_role(
         Ok(res) => {
             let user_info = convert_user_to_user_info(res);
             let payload = PayloadWithData {
-                message: "Update user success".to_string(),
+                message: "Success".to_string(),
                 data: Data::UserInfo(user_info),
             };
             Ok(warp::reply::json(&payload))

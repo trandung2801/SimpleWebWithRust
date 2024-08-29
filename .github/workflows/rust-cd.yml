@@ -1,5 +1,5 @@
 name: Rust CD
-
+# Run when Rust CI run completed
 on:
   workflow_run:
     workflows: ["Rust CI"]
@@ -7,25 +7,40 @@ on:
       - completed
 
 jobs:
+  build-docker-image:
+    name: Deploy docker image to docker hub
+    env:
+      DOCKER_HUB_REPO: andrewtran2801/rust-api-service
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push docker image
+        run: |
+          docker build . --tag ${{ env.DOCKER_HUB_REPO }}:latest
+          docker push ${{ env.DOCKER_HUB_REPO }}:latest
   setup-database:
     name: Setup Postgres Container
     runs-on: self-hosted
     steps:
       - name: Pull Postgres Image
-        run: sudo docker pull postgres:16-alpine
+        run: docker pull postgres:16-alpine
       - name: Delete old container
-        run: sudo docker rm -f postgres-container || true
+        run: docker rm -f postgres-container || true
       - name: Run Postgres Container
-        run: sudo docker run --name postgres-container -p 5432:5432 postgres:16-alpine
-
+        run: docker run --name postgres-container -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} -p 5432:5432 postgres:16-alpine
   deploy-docker:
     name: Deploy Docker Container
     runs-on: self-hosted
     steps:
       - name: Pull Docker Image
-        run: sudo docker pull andrewtran2801/rust-api-service:latest
+        run: docker pull andrewtran2801/rust-api-service:latest
       - name: Delete old container
-        run: sudo docker rm -f rust-api-container || true
+        run: docker rm -f rust-api-container || true
       - name: Run Docker Container
-        run: sudo docker run --name rust-api-container -p 3030:3030 andrewtran2801/rust-api-service:latest
+        run: docker run --name rust-api-container --link=postgres-container -p 3030:3030 andrewtran2801/rust-api-service:latest
 

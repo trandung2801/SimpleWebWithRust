@@ -2,11 +2,11 @@ use crate::models::job::JobId;
 use crate::models::pagination::{Pagination, PaginationForJob, PaginationMethods};
 use crate::models::resume::{NewResume, Resume, ResumeId};
 use crate::models::store_trait::StoreMethods;
-use crate::service::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::service::jwt::Claims;
+use crate::utils::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{event, instrument, Level};
+use tracing::instrument;
 use warp::http::StatusCode;
 
 // Handle for create resume
@@ -28,7 +28,7 @@ pub async fn create_resume(
     match store.create_resume(resume).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Created Resume Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Resume(res),
             };
             Ok(warp::reply::with_status(
@@ -53,7 +53,7 @@ pub async fn get_resume(
     match store.get_resume_by_id(ResumeId(resume_id)).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Get Resume Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Resume(res),
             };
             Ok(warp::reply::with_status(
@@ -79,7 +79,6 @@ pub async fn get_list_resume_by_user_id(
     let mut pagination = Pagination::default();
 
     if !params.is_empty() {
-        event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
     match store
@@ -88,7 +87,7 @@ pub async fn get_list_resume_by_user_id(
     {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Get List Resume Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::ListResume(res),
             };
             Ok(warp::reply::with_status(
@@ -132,7 +131,7 @@ pub async fn get_list_resume_by_job(
                 resume_list.push(resume);
             }
             let payload = PayloadWithData {
-                message: "Get List Resume Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::ListResume(resume_list),
             };
             Ok(warp::reply::with_status(
@@ -156,7 +155,7 @@ pub async fn update_resume(
     resume: Resume,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check valid of resume update
-    if claims.id != resume.clone().user_id {
+    if claims.id != resume.user_id.clone() {
         let payload = PayloadNoData {
             message: "Can't update".to_string(),
         };
@@ -168,7 +167,7 @@ pub async fn update_resume(
     match store.update_resume(resume).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Update Company Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Resume(res),
             };
             Ok(warp::reply::with_status(

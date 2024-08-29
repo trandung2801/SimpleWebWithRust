@@ -43,7 +43,7 @@ pub trait StoreMethods: fmt::Debug + Send + Sync {
     async fn delete_role(&self, role_id: RoleId) -> Result<bool, Error>;
     // methods for company
     async fn create_company(&self, new_company: NewCompany) -> Result<Company, Error>;
-    async fn get_company_by_email(&self, company_email: String) -> Result<Company, Error>;
+    async fn get_company_by_email(&self, company_email: &str) -> Result<Company, Error>;
     async fn get_company_by_id(&self, company_id: CompanyId) -> Result<Company, Error>;
     async fn get_list_company(
         &self,

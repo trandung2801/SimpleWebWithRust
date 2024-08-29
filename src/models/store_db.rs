@@ -11,6 +11,7 @@ use sqlx::{
     postgres::{PgPool, PgPoolOptions, PgRow},
     Row,
 };
+use std::fs;
 use tracing::{event, Level};
 
 #[derive(Debug, Clone)]
@@ -33,6 +34,22 @@ impl DatabaseStore {
         DatabaseStore {
             connection: db_pool,
         }
+    }
+
+    pub async fn create_sample_data(&self, path: &str) -> Result<(), Error> {
+        let content = fs::read_to_string(path).unwrap();
+        let sqls: Vec<&str> = content.split(';').collect();
+        for sql in sqls {
+            match sqlx::query(sql).execute(&self.connection).await {
+                Ok(_) => (),
+                Err(e) => event!(
+                    Level::ERROR,
+                    "Create map_job_resume from database has error: {:?}",
+                    e
+                ),
+            }
+        }
+        Ok(())
     }
 }
 
@@ -126,9 +143,9 @@ impl StoreMethods for DatabaseStore {
     //user
     async fn create_user(&self, new_user: AuthInfo) -> Result<User, Error> {
         match sqlx::query(
-            "INSERT INTO users (email, password, company_id, role_id, is_delete) \
+            "INSERT INTO users (email, hash_password, company_id, role_id, is_delete) \
                             VALUES ($1, $2, $3, $4, $5) \
-                            RETURNING id, email, password, company_id, role_id, is_delete",
+                            RETURNING id, email, hash_password, company_id, role_id, is_delete",
         )
         .bind(new_user.email)
         .bind(new_user.password)
@@ -138,7 +155,7 @@ impl StoreMethods for DatabaseStore {
         .map(|row: PgRow| User {
             id: Some(UserId(row.get("id"))),
             email: row.get("email"),
-            password: row.get("password"),
+            hash_password: row.get("hash_password"),
             company_id: CompanyId(row.get("company_id")),
             role_id: RoleId(row.get("role_id")),
             is_delete: row.get("is_delete"),
@@ -159,7 +176,7 @@ impl StoreMethods for DatabaseStore {
             .map(|row: PgRow| User {
                 id: Some(UserId(row.get("id"))),
                 email: row.get("email"),
-                password: row.get("password"),
+                hash_password: row.get("hash_password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete"),
@@ -185,7 +202,7 @@ impl StoreMethods for DatabaseStore {
             .map(|row: PgRow| User {
                 id: Some(UserId(row.get("id"))),
                 email: row.get("email"),
-                password: row.get("password"),
+                hash_password: row.get("hash_password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete"),
@@ -212,7 +229,7 @@ impl StoreMethods for DatabaseStore {
             .map(|row: PgRow| User {
                 id: Some(UserId(row.get("id"))),
                 email: row.get("email"),
-                password: row.get("password"),
+                hash_password: row.get("hash_password"),
                 company_id: CompanyId(row.get("company_id")),
                 role_id: RoleId(row.get("role_id")),
                 is_delete: row.get("is_delete"),
@@ -236,14 +253,14 @@ impl StoreMethods for DatabaseStore {
         match sqlx::query(
             "Update users SET company_id = $1 \
                 where email = $2 \
-                RETURNING id, email, password, company_id, role_id, is_delete",
+                RETURNING id, email, hash_password, company_id, role_id, is_delete",
         )
         .bind(user_info.company_id.0)
         .bind(user_info.email)
         .map(|row: PgRow| User {
             id: Some(UserId(row.get("id"))),
             email: row.get("email"),
-            password: row.get("password"),
+            hash_password: row.get("hash_password"),
             company_id: CompanyId(row.get("company_id")),
             role_id: RoleId(row.get("role_id")),
             is_delete: row.get("is_delete"),
@@ -261,16 +278,16 @@ impl StoreMethods for DatabaseStore {
 
     async fn update_password(&self, user: AuthInfo) -> Result<User, Error> {
         match sqlx::query(
-            "Update users SET password = $1 \
+            "Update users SET hash_password = $1 \
                 where email = $2 \
-                RETURNING id, email, password, company_id, role_id, is_delete",
+                RETURNING id, email, hash_password, company_id, role_id, is_delete",
         )
         .bind(user.password)
         .bind(user.email)
         .map(|row: PgRow| User {
             id: Some(UserId(row.get("id"))),
             email: row.get("email"),
-            password: row.get("password"),
+            hash_password: row.get("hash_password"),
             company_id: CompanyId(row.get("company_id")),
             role_id: RoleId(row.get("role_id")),
             is_delete: row.get("is_delete"),
@@ -294,14 +311,14 @@ impl StoreMethods for DatabaseStore {
         match sqlx::query(
             "Update users SET role_id = $1 \
                 where id = $2 \
-                RETURNING id, email, password, company_id, role_id, is_delete",
+                RETURNING id, email, hash_password, company_id, role_id, is_delete",
         )
         .bind(role_id.0)
         .bind(user.id.0)
         .map(|row: PgRow| User {
             id: Some(UserId(row.get("id"))),
             email: row.get("email"),
-            password: row.get("password"),
+            hash_password: row.get("hash_password"),
             company_id: CompanyId(row.get("company_id")),
             role_id: RoleId(row.get("role_id")),
             is_delete: row.get("is_delete"),
@@ -482,7 +499,7 @@ impl StoreMethods for DatabaseStore {
         }
     }
 
-    async fn get_company_by_email(&self, company_email: String) -> Result<Company, Error> {
+    async fn get_company_by_email(&self, company_email: &str) -> Result<Company, Error> {
         match sqlx::query("SELECT * FROM COMPANIES WHERE email = $1")
             .bind(company_email)
             .map(|row: PgRow| Company {

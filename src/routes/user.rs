@@ -193,7 +193,3 @@ pub fn user_route(
         .or(delete_admin_api)
         .or(set_admin_api)
 }
-//test
-// #[cfg(test)]
-// #[path = "../tests/route_user.rs"]
-// mod route_user_tests;

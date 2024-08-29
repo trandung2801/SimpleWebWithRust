@@ -1,14 +1,14 @@
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::pagination::{Pagination, PaginationMethods};
 use crate::models::store_trait::StoreMethods;
-use crate::service::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use crate::service::jwt::Claims;
+use crate::utils::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{event, instrument, Level};
+use tracing::instrument;
 use warp::http::StatusCode;
 
-// Handle for create company
+// Handle for creating company
 //
 // This function adds a new company to the system. It takes company information to
 // be created and a reference to the StoreMethods trait object for company. It
@@ -20,7 +20,7 @@ pub async fn create_company(
     new_company: NewCompany,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     //Check valid company
-    let new_email = new_company.email.clone();
+    let new_email = &new_company.email;
     if let Ok(_res) = store.get_company_by_email(new_email).await {
         let payload = PayloadNoData {
             message: "Email company already exists".to_string(),
@@ -31,16 +31,16 @@ pub async fn create_company(
         ));
     }
 
-    let company = NewCompany {
+    let new_company = NewCompany {
         email: new_company.email,
         name: new_company.name,
         address: new_company.address,
         description: new_company.description,
     };
-    match store.create_company(company).await {
+    match store.create_company(new_company).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Create Company Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Company(res),
             };
             Ok(warp::reply::with_status(
@@ -64,7 +64,7 @@ pub async fn get_company(
     match store.get_company_by_id(CompanyId(company_id)).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Get Company Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Company(res),
             };
             Ok(warp::reply::with_status(
@@ -89,7 +89,6 @@ pub async fn get_list_company(
     let mut pagination = Pagination::default();
 
     if !params.is_empty() {
-        event!(Level::INFO, pagination = true);
         pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
     }
     // Get list companies with pagination filters
@@ -99,7 +98,7 @@ pub async fn get_list_company(
     {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Get List Company Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::ListCompany(res),
             };
             Ok(warp::reply::with_status(
@@ -123,7 +122,7 @@ pub async fn update_company(
     company: Company,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // Check valid company
-    let email_update = company.email.clone();
+    let email_update = &company.email;
     if let Ok(_res) = store.get_company_by_email(email_update).await {
         let payload = PayloadNoData {
             message: "Email company already exists".to_string(),
@@ -136,7 +135,7 @@ pub async fn update_company(
     match store.update_company(company).await {
         Ok(res) => {
             let payload = PayloadWithData {
-                message: "Update Company Success".to_string(),
+                message: "Success".to_string(),
                 data: Data::Company(res),
             };
             Ok(warp::reply::with_status(

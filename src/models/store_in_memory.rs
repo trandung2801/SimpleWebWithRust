@@ -105,7 +105,7 @@ impl StoreMethods for InMemoryStore {
         let user = User {
             id: Some(UserId(id)),
             email: new_user.email,
-            password: new_user.password,
+            hash_password: new_user.password,
             company_id: CompanyId(0),
             role_id: RoleId(2),
             is_delete: false,
@@ -163,7 +163,7 @@ impl StoreMethods for InMemoryStore {
         let user_update = User {
             id: Some(user_info.id.clone()),
             email: user_info.email,
-            password: user.password,
+            hash_password: user.hash_password,
             company_id: user_info.company_id,
             role_id: user_info.role_id,
             is_delete: user_info.is_delete,
@@ -200,7 +200,7 @@ impl StoreMethods for InMemoryStore {
         let user_update = User {
             id: _user.id,
             email: _user.email,
-            password: user.password,
+            hash_password: user.password,
             company_id: _user.company_id,
             role_id: _user.role_id,
             is_delete: _user.is_delete,
@@ -227,7 +227,7 @@ impl StoreMethods for InMemoryStore {
         let user_update = User {
             id: _user.id,
             email: _user.email,
-            password: _user.password,
+            hash_password: _user.hash_password,
             company_id: _user.company_id,
             role_id: id_role,
             is_delete: _user.is_delete,
@@ -328,7 +328,7 @@ impl StoreMethods for InMemoryStore {
         Ok(company)
     }
 
-    async fn get_company_by_email(&self, company_email: String) -> Result<Company, Error> {
+    async fn get_company_by_email(&self, company_email: &str) -> Result<Company, Error> {
         let vec_company = self
             .companies
             .read()

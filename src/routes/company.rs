@@ -73,7 +73,3 @@ pub fn company_route(
         .or(update_company_api)
         .or(delete_company_api)
 }
-
-// #[cfg(test)]
-// #[path = "../tests/route_company.rs"]
-// mod route_company_tests;
