@@ -1,3 +1,11 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use tokio::sync::RwLock;
+use tracing::{event, Level};
+
+use crate::errors::Error;
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::job::{Job, JobId, NewJob};
 use crate::models::map_resume_job::{MapResumeJob, MapResumeJobId, NewMapResumeJob};
@@ -5,12 +13,6 @@ use crate::models::resume::{NewResume, Resume, ResumeId};
 use crate::models::role::{Role, RoleId, RoleInfo};
 use crate::models::store_trait::StoreMethods;
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
-use crate::service::handle_errors::Error;
-use async_trait::async_trait;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{event, Level};
 
 #[derive(Clone, Debug)]
 pub struct InMemoryStore {
@@ -48,17 +50,15 @@ impl StoreMethods for InMemoryStore {
         &self,
         new_map_resume_job: NewMapResumeJob,
     ) -> Result<MapResumeJob, Error> {
-        let len = self.map_resume_job.read().await.len() as i32;
+        let mut lock_map_resume_job = self.map_resume_job.write().await;
+        let len = lock_map_resume_job.len() as i32;
         let id: i32 = if len == 0 { 1 } else { len + 1 };
         let map_resume_job = MapResumeJob {
             id: Some(MapResumeJobId(id)),
             resume_id: new_map_resume_job.resume_id,
             job_id: new_map_resume_job.job_id,
         };
-        self.map_resume_job
-            .write()
-            .await
-            .insert(map_resume_job.id.clone().unwrap(), map_resume_job.clone());
+        lock_map_resume_job.insert(map_resume_job.id.clone().unwrap(), map_resume_job.clone());
         Ok(map_resume_job)
     }
 
@@ -99,22 +99,22 @@ impl StoreMethods for InMemoryStore {
             .collect::<Vec<_>>())
     }
     //methods for users
+
     async fn create_user(&self, new_user: AuthInfo) -> Result<User, Error> {
-        let len = self.users.read().await.len() as i32;
+        let mut lock_user = self.users.write().await;
+        let len = lock_user.len() as i32;
         let id: i32 = if len == 0 { 1 } else { len + 1 };
+
         let user = User {
             id: Some(UserId(id)),
             email: new_user.email,
-            hash_password: new_user.password,
+            hash_password: new_user.hash_password,
             company_id: CompanyId(0),
             role_id: RoleId(2),
             is_delete: false,
         };
 
-        self.users
-            .write()
-            .await
-            .insert(user.id.clone().unwrap(), user.clone());
+        lock_user.insert(user.id.clone().unwrap(), user.clone());
         Ok(user)
     }
 
@@ -200,7 +200,7 @@ impl StoreMethods for InMemoryStore {
         let user_update = User {
             id: _user.id,
             email: _user.email,
-            hash_password: user.password,
+            hash_password: user.hash_password,
             company_id: _user.company_id,
             role_id: _user.role_id,
             is_delete: _user.is_delete,
@@ -251,7 +251,8 @@ impl StoreMethods for InMemoryStore {
 
     // methods for role
     async fn create_role(&self, new_role: RoleInfo) -> Result<Role, Error> {
-        let len = self.roles.read().await.len() as i32;
+        let mut lock_role = self.roles.write().await;
+        let len = lock_role.len() as i32;
         let id: i32 = if len == 0 { 1 } else { len + 1 };
         let role = Role {
             id: Some(RoleId(id)),
@@ -259,10 +260,7 @@ impl StoreMethods for InMemoryStore {
             is_delete: false,
         };
 
-        self.roles
-            .write()
-            .await
-            .insert(role.id.clone().unwrap(), role.clone());
+        lock_role.insert(role.id.clone().unwrap(), role.clone());
         Ok(role)
     }
 
@@ -311,7 +309,8 @@ impl StoreMethods for InMemoryStore {
 
     // methods for company
     async fn create_company(&self, new_company: NewCompany) -> Result<Company, Error> {
-        let len = self.companies.read().await.len() as i32;
+        let mut lock_company = self.companies.write().await;
+        let len = lock_company.len() as i32;
         let id: i32 = if len == 0 { 1 } else { len + 1 };
         let company = Company {
             id: Some(CompanyId(id)),
@@ -321,10 +320,7 @@ impl StoreMethods for InMemoryStore {
             description: new_company.description,
             is_delete: false,
         };
-        self.companies
-            .write()
-            .await
-            .insert(company.id.clone().unwrap(), company.clone());
+        lock_company.insert(company.id.clone().unwrap(), company.clone());
         Ok(company)
     }
 
@@ -407,7 +403,8 @@ impl StoreMethods for InMemoryStore {
     }
     // methods for job
     async fn create_job(&self, new_job: NewJob) -> Result<Job, Error> {
-        let len = self.jobs.read().await.len() as i32;
+        let mut lock_job = self.jobs.write().await;
+        let len = lock_job.len() as i32;
         let id: i32 = if len == 0 { 1 } else { len + 1 };
         let job = Job {
             id: Some(JobId(id)),
@@ -420,10 +417,7 @@ impl StoreMethods for InMemoryStore {
             description: new_job.description,
             is_delete: false,
         };
-        self.jobs
-            .write()
-            .await
-            .insert(job.id.clone().unwrap(), job.clone());
+        lock_job.insert(job.id.clone().unwrap(), job.clone());
         Ok(job)
     }
 
@@ -473,7 +467,8 @@ impl StoreMethods for InMemoryStore {
     }
     //methods for resume
     async fn create_resume(&self, new_resume: NewResume) -> Result<Resume, Error> {
-        let len = self.resumes.read().await.len() as i32;
+        let mut lock_resume = self.resumes.write().await;
+        let len = lock_resume.len() as i32;
         let id: i32 = if len == 0 { 1 } else { len + 1 };
         let resume = Resume {
             id: Some(ResumeId(id)),
@@ -482,10 +477,7 @@ impl StoreMethods for InMemoryStore {
             url: new_resume.url,
             is_delete: false,
         };
-        self.resumes
-            .write()
-            .await
-            .insert(resume.id.clone().unwrap(), resume.clone());
+        lock_resume.insert(resume.id.clone().unwrap(), resume.clone());
         Ok(resume)
     }
 

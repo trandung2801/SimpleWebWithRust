@@ -1,10 +1,11 @@
-use crate::models::role::RoleId;
-use crate::models::user::{User, UserId};
-use crate::service::handle_errors::Error;
 use chrono::Utc;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use tracing::{event, Level};
+
+use crate::errors::Error;
+use crate::models::role::RoleId;
+use crate::models::user::{User, UserId};
 
 const JWT_ACCESS_TOKEN_SECRET: &[u8] = b"access secret";
 const JWT_ACCESS_TOKEN_IN: i64 = 1;

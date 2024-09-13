@@ -1,3 +1,4 @@
+use thiserror::Error;
 use tracing::{event, Level};
 use warp::{
     filters::{body::BodyDeserializeError, cors::CorsForbidden},
@@ -6,75 +7,49 @@ use warp::{
     Rejection, Reply,
 };
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum Error {
     //Error of database
-    DatabaseQuery(sqlx::Error),
+    #[error("Database query error, invalid data")]
+    DatabaseQuery(#[from] sqlx::Error),
 
     //Error of In Memory
+    #[error("Not found data")]
     NotFound,
 
     //Error of token
+    #[error("Can't decrypt token error")]
     CannotDecryptToken,
+    #[error("Can't encrypt token error")]
     CannotEncryptToken,
 
     //Error of hash and verify password
-    ArgonLibrary(argon2::Error),
+    #[error("Can't verify password")]
+    ArgonLibrary(#[from] argon2::Error),
+    #[error("Un authenticated")]
     WrongPassword,
 
     //Error of authorized user and authenticated user
+    #[error("No permission to change the underlying resource")]
     Unauthorized,
+    #[error("UnAuthenticated")]
     Unauthenticated,
-    Utf8(std::str::Utf8Error),
+    #[error("Utf8 error: {0}")]
+    Utf8(#[from] std::str::Utf8Error),
+    #[error("Missing bearer auth type")]
     MissingBearerAuthType,
 
-    Parse(std::num::ParseIntError),
-    Migration(sqlx::migrate::MigrateError),
-    LoadConfigErr(serde_yaml::Error),
+    #[error("Can't parse parameter: {0}")]
+    Parse(#[from] std::num::ParseIntError),
+    #[error("Can't migrate data")]
+    Migration(#[from] sqlx::migrate::MigrateError),
+    #[error("Load configs error: {0}")]
+    LoadConfigErr(#[from] serde_yaml::Error),
+    #[error("Missing parameter")]
     MissingParameters,
 }
 
-#[derive(Debug, Clone)]
-pub struct APILayerError {
-    pub status: u16,
-    pub message: String,
-}
-
-impl std::fmt::Display for APILayerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Status: {}, Message: {}", self.status, self.message)
-    }
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Error::DatabaseQuery(_) => write!(f, "Database query error, invalid data"),
-
-            Error::NotFound => write!(f, "Not found data"),
-
-            Error::CannotDecryptToken => write!(f, "Can't decrypt token error"),
-            Error::CannotEncryptToken => write!(f, "Can't encrypt token error"),
-
-            Error::ArgonLibrary(_) => write!(f, "Can't verify password"),
-            Error::WrongPassword => write!(f, "Wrong password"),
-
-            Error::Unauthorized => write!(f, "No permission to change the underlying resource"),
-            Error::Unauthenticated => write!(f, "Un authenticated"),
-            Error::Utf8(err) => write!(f, "Utf8 error: {}", err),
-            Error::MissingBearerAuthType => write!(f, "Missing bearer auth type"),
-
-            Error::Parse(ref err) => write!(f, "Can't parse parameter: {}", err),
-            Error::MissingParameters => write!(f, "Missing parameter"),
-            Error::Migration(_) => write!(f, "Can't migrate data"),
-            Error::LoadConfigErr(err) => write!(f, "Load configs error: {}", err),
-        }
-    }
-}
-
 impl Reject for Error {}
-impl Reject for APILayerError {}
-
 // search in
 //https://www.ibm.com/docs/en/db2-for-zos/13?topic=codes-sqlstate-values-common-error#db2z_sqlstatevalues__classcode02
 const DUPLICATE_KEY: u32 = 23505;

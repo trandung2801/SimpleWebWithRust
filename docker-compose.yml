@@ -1,5 +1,5 @@
 version: "3.7"
-name: "rust-api-service"
+name: "rust-api-services"
 services:
   jaeger:
     image: jaegertracing/all-in-one:latest

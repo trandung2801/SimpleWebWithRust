@@ -1,75 +1,57 @@
-use crate::models::job::JobId;
-use crate::models::pagination::{Pagination, PaginationForJob, PaginationMethods};
-use crate::models::resume::{NewResume, Resume, ResumeId};
-use crate::models::store_trait::StoreMethods;
-use crate::service::jwt::Claims;
-use crate::utils::convert_to_json::{Data, PayloadNoData, PayloadWithData};
 use std::collections::HashMap;
 use std::sync::Arc;
+
 use tracing::instrument;
 use warp::http::StatusCode;
 
+use crate::errors::Error;
+use crate::models::job::JobId;
+use crate::models::pagination::{Pagination, PaginationForJob};
+use crate::models::resume::{NewResume, Resume, ResumeId};
+use crate::models::store_trait::StoreMethods;
+use crate::services::jwt::Claims;
+use crate::utils::convert_to_json::{Data, PayloadNoData, PayloadWithData};
+
 // Handle for create resume
-//
-// This function adds a new resume to the system. It takes resume information to
-// be created and a reference to the StoreMethods trait object for resume. It
-// returns a success response with status 200 if resume is created successfully
 #[instrument(level = "info", skip(store))]
 pub async fn create_resume(
     store: Arc<dyn StoreMethods + Send + Sync>,
     claims: Claims,
     new_resume: NewResume,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let resume = NewResume {
-        user_id: new_resume.user_id,
-        email: new_resume.email,
-        url: new_resume.url,
+    let res = store.create_resume(new_resume).await.map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::Resume(res),
     };
-    match store.create_resume(resume).await {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::Resume(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::CREATED,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::CREATED,
+    ))
 }
 
 // Handle for retrieving resume by ID
-//
-// This function retrieves a resume with the specified ID from the system. It takes
-// the ID from query parameters. It returns a JSON response containing the resume.
 #[instrument(level = "info", skip(store))]
 pub async fn get_resume(
     store: Arc<dyn StoreMethods + Send + Sync>,
     claims: Claims,
     resume_id: i32,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    match store.get_resume_by_id(ResumeId(resume_id)).await {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::Resume(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    let res = store
+        .get_resume_by_id(ResumeId(resume_id))
+        .await
+        .map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::Resume(res),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handle for retrieving list resumes based on query parameters by user ID
-//
-// This function retrieves list resumes based on the provided query parameters by user ID.
-// It takes a HashMap containing the query parameters and a reference to the StoreMethod
-// trait object for resume. It returns a JSON response containing the list of resumes.
 #[instrument(level = "info", skip(store))]
 pub async fn get_list_resume_by_user_id(
     store: Arc<dyn StoreMethods + Send + Sync>,
@@ -79,31 +61,23 @@ pub async fn get_list_resume_by_user_id(
     let mut pagination = Pagination::default();
 
     if !params.is_empty() {
-        pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
+        pagination = Pagination::extract_pagination(params)?;
     }
-    match store
+    let res = store
         .get_list_resume_by_user_id(pagination.limit, pagination.offset, claims.id)
         .await
-    {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::ListResume(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(_e) => Err(warp::reject()),
-    }
+        .map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::ListResume(res),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handle for retrieving list resumes based on query parameters by job ID
-//
-// This function retrieves list resumes based on the provided query parameters by job ID.
-// It takes a HashMap containing the query parameters and a reference to the StoreMethod
-// trait object for resume. It returns a JSON response containing the list of resumes.
 #[instrument(level = "info", skip(store))]
 pub async fn get_list_resume_by_job(
     store: Arc<dyn StoreMethods + Send + Sync>,
@@ -113,41 +87,32 @@ pub async fn get_list_resume_by_job(
 
     if !params.is_empty() {
         // event!(Level::INFO, pagination = true);
-        pagination = <Pagination as PaginationMethods>::extract_pagination_job(params)?;
+        pagination = PaginationForJob::extract_pagination_job(params)?;
     }
-
-    match store
+    let res = store
         .get_list_resume_by_job_id(
             pagination.limit,
             pagination.offset,
             JobId(pagination.job_id),
         )
         .await
-    {
-        Ok(res) => {
-            let mut resume_list = Vec::new();
-            for e in res {
-                let resume = store.clone().get_resume_by_id(e.resume_id).await?;
-                resume_list.push(resume);
-            }
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::ListResume(resume_list),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(_e) => Err(warp::reject()),
+        .map_err(Error::from)?;
+    let mut resume_list = Vec::new();
+    for element in res {
+        let resume = store.clone().get_resume_by_id(element.resume_id).await?;
+        resume_list.push(resume);
     }
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::ListResume(resume_list),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handler for updating resume.
-//
-// This function updates resume. It takes info of the resume to be updated
-// from Job and a reference to the StoreMethod trait object for resume.
-// It returns a success response with status code 200 if the resume update successfully
 #[instrument(level = "info", skip(store))]
 pub async fn update_resume(
     store: Arc<dyn StoreMethods + Send + Sync>,
@@ -164,37 +129,30 @@ pub async fn update_resume(
             StatusCode::BAD_REQUEST,
         ));
     }
-    match store.update_resume(resume).await {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::Resume(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    let res = store.update_resume(resume).await.map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::Resume(res),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handler for deleting resume by ID.
-//
-// This function deletes resume with the specified ID from the system. It takes the ID of
-// the resume to be deleted from Company and a reference to the StoreMethod trait object. It
-// returns a success response with status code 200 if the resume is deleted successfully.
 #[instrument(level = "info", skip(store))]
 pub async fn delete_resume(
     store: Arc<dyn StoreMethods + Send + Sync>,
     claims: Claims,
     resume: Resume,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    match store.delete_resume(resume.id.unwrap()).await {
-        Ok(_) => Ok(warp::reply::with_status(
-            "Delete Resume Success".to_string(),
-            StatusCode::OK,
-        )),
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    let _ = store
+        .delete_resume(resume.id.unwrap())
+        .await
+        .map_err(Error::from)?;
+    Ok(warp::reply::with_status(
+        "Success".to_string(),
+        StatusCode::OK,
+    ))
 }

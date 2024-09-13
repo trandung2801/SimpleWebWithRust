@@ -1,6 +1,6 @@
 log_level = "info"
-service_name = "rust-api-service"
 sample_data_url = "migrations/postgres/sample.sql"
+service_name = "rust-api-service"
 #default database is postgres database
 #database is in-memory if not set database or database = "in-memory"
 database = "postgres"

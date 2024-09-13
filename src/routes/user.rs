@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use warp::Filter;
+
 use crate::controllers::user::{
     delete, get_list_users, get_user_by_id, login, register, set_admin_role, set_hr_role,
     update_password, update_user,
@@ -5,8 +9,6 @@ use crate::controllers::user::{
 use crate::middleware::authen::auth;
 use crate::models::role::{ADMIN_ROLE_ID, HR_ROLE_ID, USER_ROLE_ID};
 use crate::models::store_trait::StoreMethods;
-use std::sync::Arc;
-use warp::Filter;
 
 // Configures and returns the Warp filter for handling HTTP requests of user.
 pub fn user_route(
@@ -40,7 +42,7 @@ pub fn user_route(
     let get_user_api = user_path
         .and(warp::get())
         .and(warp::path("user"))
-        .and(warp::path("getUser"))
+        .and(warp::path("get-user"))
         .and(store_filter.clone())
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
@@ -50,7 +52,7 @@ pub fn user_route(
     let get_list_user_api = user_path
         .and(warp::get())
         .and(warp::path("user"))
-        .and(warp::path("listUser"))
+        .and(warp::path("list-user"))
         .and(store_filter.clone())
         .and(warp::path::end())
         .and(warp::query())
@@ -59,7 +61,7 @@ pub fn user_route(
     //PUT api/v1/user/updateUser
     let update_user_api = user_path
         .and(warp::path("user"))
-        .and(warp::path("updateUser"))
+        .and(warp::path("update-user"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -70,7 +72,7 @@ pub fn user_route(
     //PUT api/v1/user/updateUser
     let update_hr_api = user_path
         .and(warp::path("user"))
-        .and(warp::path("updateUser"))
+        .and(warp::path("update-user"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -81,7 +83,7 @@ pub fn user_route(
     //PUT api/v1/admin/updateAdmin
     let update_admin_api = user_path
         .and(warp::path("admin"))
-        .and(warp::path("updateAdmin"))
+        .and(warp::path("update-admin"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -92,7 +94,7 @@ pub fn user_route(
     //PUT api/v1/user/updatePassword
     let update_user_password_api = user_path
         .and(warp::path("user"))
-        .and(warp::path("updatePassword"))
+        .and(warp::path("update-password"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -103,7 +105,7 @@ pub fn user_route(
     //PUT api/v1/user/updatePassword
     let update_hr_password_api = user_path
         .and(warp::path("user"))
-        .and(warp::path("updatePassword"))
+        .and(warp::path("update-password"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -114,7 +116,7 @@ pub fn user_route(
     //PUT api/v1/admin/updatePassword
     let update_admin_password_api = user_path
         .and(warp::path("admin"))
-        .and(warp::path("updatePassword"))
+        .and(warp::path("update-password"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -125,7 +127,7 @@ pub fn user_route(
     //PUT api/v1/user/deleteUser
     let delete_user_api = user_path
         .and(warp::path("user"))
-        .and(warp::path("deleteUser"))
+        .and(warp::path("delete-user"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -136,7 +138,7 @@ pub fn user_route(
     //PUT api/v1/user/deleteUser
     let delete_hr_api = user_path
         .and(warp::path("user"))
-        .and(warp::path("deleteUser"))
+        .and(warp::path("delete-user"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -147,7 +149,7 @@ pub fn user_route(
     //PUT api/v1/admin/deleteAdmin
     let delete_admin_api = user_path
         .and(warp::path("admin"))
-        .and(warp::path("deleteAdmin"))
+        .and(warp::path("delete-admin"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -158,7 +160,7 @@ pub fn user_route(
     //PUT api/v1/admin/setHr
     let set_hr_api = user_path
         .and(warp::path("admin"))
-        .and(warp::path("setHr"))
+        .and(warp::path("set-hr"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -169,7 +171,7 @@ pub fn user_route(
     //PUT api/v1/admin/setAdmin
     let set_admin_api = user_path
         .and(warp::path("admin"))
-        .and(warp::path("setAdmin"))
+        .and(warp::path("set-admin"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())

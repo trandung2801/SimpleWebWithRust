@@ -1,12 +1,13 @@
+use serde::{Deserialize, Serialize};
+
 use crate::models::company::Company;
 use crate::models::job::Job;
 use crate::models::map_resume_job::MapResumeJob;
 use crate::models::resume::Resume;
 use crate::models::role::Role;
 use crate::models::user::UserInfo;
-use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub enum Data {
     UserInfo(UserInfo),
     ListUserInfo(Vec<UserInfo>),
@@ -22,17 +23,17 @@ pub enum Data {
     ListJob(Vec<Job>),
     ListResume(Vec<Resume>),
 }
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct PayloadWithData {
     pub message: String,
     pub data: Data,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct PayloadNoData {
     pub message: String,
 }
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct PayloadForLogin {
     pub message: String,
     pub access_token: String,

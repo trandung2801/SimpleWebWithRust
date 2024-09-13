@@ -1,5 +1,6 @@
-use crate::service::handle_errors::Error;
 use std::collections::HashMap;
+
+use crate::errors::Error;
 
 /// Pagination struct which is getting extract
 /// from query params
@@ -20,15 +21,6 @@ pub struct PaginationForJob {
     pub job_id: i32,
 }
 
-#[derive(Default, Debug, PartialEq)]
-pub struct PaginationForResume {
-    /// The index of the last item which has to be returned
-    pub limit: Option<i32>,
-    /// The index of the first item which has to be returned
-    pub offset: i32,
-    pub resume_id: i32,
-}
-
 /// Extract query parameters from the `/questions` route
 /// # Example query
 /// GET requests to this route can have a pagination attached so we just
@@ -46,14 +38,9 @@ pub struct PaginationForResume {
 /// assert_eq!(p.limit, Some(1));
 /// assert_eq!(p.offset, 10);
 /// ```
-///
-pub trait PaginationMethods {
-    fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error>;
-    fn extract_pagination_job(params: HashMap<String, String>) -> Result<PaginationForJob, Error>;
-}
 
-impl PaginationMethods for Pagination {
-    fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
+impl Pagination {
+    pub fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
         // Could be improved in the future
         if params.contains_key("limit") && params.contains_key("offset") {
             return Ok(Pagination {
@@ -69,9 +56,12 @@ impl PaginationMethods for Pagination {
         }
         Err(Error::MissingParameters)
     }
+}
 
-    fn extract_pagination_job(params: HashMap<String, String>) -> Result<PaginationForJob, Error> {
-        // Could be improved in the future
+impl PaginationForJob {
+    pub fn extract_pagination_job(
+        params: HashMap<String, String>,
+    ) -> Result<PaginationForJob, Error> {
         if params.contains_key("limit")
             && params.contains_key("offset")
             && params.contains_key("jobId")
@@ -95,14 +85,15 @@ impl PaginationMethods for Pagination {
 
 #[cfg(test)]
 mod pagination_tests {
-    use super::{Error, HashMap, Pagination, PaginationMethods};
+    use super::{Error, HashMap, Pagination};
 
     #[test]
     fn valid_pagination() {
         let mut params = HashMap::new();
         params.insert(String::from("limit"), String::from("1"));
         params.insert(String::from("offset"), String::from("1"));
-        let pagination_result = <Pagination as PaginationMethods>::extract_pagination(params);
+        // let pagination_result = <Pagination as PaginationMethods>::extract_pagination(params);
+        let pagination_result = Pagination::extract_pagination(params);
         let expected = Pagination {
             limit: Some(1),
             offset: 1,
@@ -115,10 +106,7 @@ mod pagination_tests {
         let mut params = HashMap::new();
         params.insert(String::from("limit"), String::from("1"));
 
-        let pagination_result = format!(
-            "{}",
-            <Pagination as PaginationMethods>::extract_pagination(params).unwrap_err()
-        );
+        let pagination_result = format!("{}", Pagination::extract_pagination(params).unwrap_err());
         let expected = format!("{}", Error::MissingParameters);
 
         assert_eq!(pagination_result, expected);
@@ -129,10 +117,7 @@ mod pagination_tests {
         let mut params = HashMap::new();
         params.insert(String::from("offset"), String::from("1"));
 
-        let pagination_result = format!(
-            "{}",
-            <Pagination as PaginationMethods>::extract_pagination(params).unwrap_err()
-        );
+        let pagination_result = format!("{}", Pagination::extract_pagination(params).unwrap_err());
         let expected = format!("{}", Error::MissingParameters);
 
         assert_eq!(pagination_result, expected);
@@ -143,10 +128,7 @@ mod pagination_tests {
         let mut params = HashMap::new();
         params.insert(String::from("limit"), String::from("1"));
         params.insert(String::from("offset"), String::from("C"));
-        let pagination_result = format!(
-            "{}",
-            <Pagination as PaginationMethods>::extract_pagination(params).unwrap_err()
-        );
+        let pagination_result = format!("{}", Pagination::extract_pagination(params).unwrap_err());
 
         let expected = String::from("Can't parse parameter: invalid digit found in string");
 
@@ -158,10 +140,7 @@ mod pagination_tests {
         let mut params = HashMap::new();
         params.insert(String::from("limit"), String::from("C"));
         params.insert(String::from("offset"), String::from("1"));
-        let pagination_result = format!(
-            "{}",
-            <Pagination as PaginationMethods>::extract_pagination(params).unwrap_err()
-        );
+        let pagination_result = format!("{}", Pagination::extract_pagination(params).unwrap_err());
 
         let expected = String::from("Can't parse parameter: invalid digit found in string");
 

@@ -1,11 +1,13 @@
+use std::sync::Arc;
+
+use warp::Filter;
+
 use crate::controllers::job::{
     apply_job, create_job, delete_job, get_job, get_list_job, update_job,
 };
 use crate::middleware::authen::auth;
 use crate::models::role::{HR_ROLE_ID, USER_ROLE_ID};
 use crate::models::store_trait::StoreMethods;
-use std::sync::Arc;
-use warp::Filter;
 
 // Configures and returns the Warp filter for handling HTTP requests of job
 pub fn job_route(
@@ -21,7 +23,7 @@ pub fn job_route(
 
     //POST api/v1/job/createJob
     let create_api = job_path
-        .and(warp::path("createJob"))
+        .and(warp::path("create-job"))
         .and(warp::path::end())
         .and(warp::post())
         .and(store_filter.clone())
@@ -32,7 +34,7 @@ pub fn job_route(
     //GET api/v1/job/getJob/:id
     let get_job_api = job_path
         .and(warp::get())
-        .and(warp::path("getJob"))
+        .and(warp::path("get-job"))
         .and(store_filter.clone())
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
@@ -41,7 +43,7 @@ pub fn job_route(
     //GET api/v1/job/listJob?limit=x&offset=y
     let get_list_job_api = job_path
         .and(warp::get())
-        .and(warp::path("listJob"))
+        .and(warp::path("list-job"))
         .and(warp::path::end())
         .and(store_filter.clone())
         .and(warp::query())
@@ -49,7 +51,7 @@ pub fn job_route(
 
     //PUT api/v1/job/updateJob
     let update_job_api = job_path
-        .and(warp::path("updateJob"))
+        .and(warp::path("update-job"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -59,7 +61,7 @@ pub fn job_route(
 
     //POST api/v1/job/applyJob
     let apply_job_api = job_path
-        .and(warp::path("applyJob"))
+        .and(warp::path("apply-job"))
         .and(warp::path::end())
         .and(warp::post())
         .and(store_filter.clone())
@@ -69,7 +71,7 @@ pub fn job_route(
 
     //PUT api/v1/job/deleteJob
     let delete_job_api = job_path
-        .and(warp::path("deleteJob"))
+        .and(warp::path("delete-job"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())

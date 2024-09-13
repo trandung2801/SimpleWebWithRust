@@ -7,13 +7,13 @@ use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Registry};
-// Initializes OpenTelemetry for tracing in a web service.
+// Initializes OpenTelemetry for tracing in a web services.
 //
-// This function initializes OpenTelemetry for distributed tracing in a web service.
+// This function initializes OpenTelemetry for distributed tracing in a web services.
 //
 // # Arguments
 //
-// * `service_name` - A string slice representing the name of the service.
+// * `service_name` - A string slice representing the name of the services.
 // * `server_host` - A string slice representing the host of the exporter.
 // * `server_jaeger_port` - A string slice representing the port of jaeger listening.
 // * `log_level` - A string slice representing the level of log.

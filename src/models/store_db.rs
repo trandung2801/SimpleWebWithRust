@@ -1,3 +1,13 @@
+use std::fs;
+
+use async_trait::async_trait;
+use sqlx::{
+    postgres::{PgPool, PgPoolOptions, PgRow},
+    Row,
+};
+use tracing::{event, Level};
+
+use crate::errors::Error;
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::job::{Job, JobId, NewJob};
 use crate::models::map_resume_job::{MapResumeJob, MapResumeJobId, NewMapResumeJob};
@@ -5,14 +15,6 @@ use crate::models::resume::{NewResume, Resume, ResumeId};
 use crate::models::role::{Role, RoleId, RoleInfo, USER_ROLE_ID};
 use crate::models::store_trait::StoreMethods;
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
-use crate::service::handle_errors::Error;
-use async_trait::async_trait;
-use sqlx::{
-    postgres::{PgPool, PgPoolOptions, PgRow},
-    Row,
-};
-use std::fs;
-use tracing::{event, Level};
 
 #[derive(Debug, Clone)]
 pub struct DatabaseStore {
@@ -148,7 +150,7 @@ impl StoreMethods for DatabaseStore {
                             RETURNING id, email, hash_password, company_id, role_id, is_delete",
         )
         .bind(new_user.email)
-        .bind(new_user.password)
+        .bind(new_user.hash_password)
         .bind(0)
         .bind(USER_ROLE_ID)
         .bind(false)
@@ -282,7 +284,7 @@ impl StoreMethods for DatabaseStore {
                 where email = $2 \
                 RETURNING id, email, hash_password, company_id, role_id, is_delete",
         )
-        .bind(user.password)
+        .bind(user.hash_password)
         .bind(user.email)
         .map(|row: PgRow| User {
             id: Some(UserId(row.get("id"))),

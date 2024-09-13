@@ -1949,6 +1949,7 @@ dependencies = [
 name = "rust-api-service"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "async-trait",
  "chrono",
  "clap",
@@ -1969,6 +1970,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sqlx",
+ "thiserror",
  "tokio",
  "tracing",
  "tracing-bunyan-formatter",

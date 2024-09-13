@@ -1,12 +1,14 @@
+use std::fmt;
+
+use async_trait::async_trait;
+
+use crate::errors::Error;
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::job::{Job, JobId, NewJob};
 use crate::models::map_resume_job::{MapResumeJob, NewMapResumeJob};
 use crate::models::resume::{NewResume, Resume, ResumeId};
 use crate::models::role::{Role, RoleId, RoleInfo};
 use crate::models::user::{AuthInfo, User, UserId, UserInfo};
-use crate::service::handle_errors::Error;
-use async_trait::async_trait;
-use std::fmt;
 
 #[async_trait]
 pub trait StoreMethods: fmt::Debug + Send + Sync {

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 pub const ADMIN_ROLE_ID: i32 = 1;
 pub const USER_ROLE_ID: i32 = 2;
 pub const HR_ROLE_ID: i32 = 3;
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Role {
     pub id: Option<RoleId>,
     pub role: String,

@@ -1,19 +1,18 @@
-use crate::models::job::{Job, JobId, NewJob};
-use crate::models::map_resume_job::NewMapResumeJob;
-use crate::models::pagination::{Pagination, PaginationMethods};
-use crate::models::store_trait::StoreMethods;
-use crate::service::jwt::Claims;
-use crate::utils::convert_to_json::{Data, PayloadNoData, PayloadWithData};
-use reqwest::StatusCode;
 use std::collections::HashMap;
 use std::sync::Arc;
+
+use reqwest::StatusCode;
 use tracing::instrument;
 
+use crate::errors::Error;
+use crate::models::job::{Job, JobId, NewJob};
+use crate::models::map_resume_job::NewMapResumeJob;
+use crate::models::pagination::Pagination;
+use crate::models::store_trait::StoreMethods;
+use crate::services::jwt::Claims;
+use crate::utils::convert_to_json::{Data, PayloadNoData, PayloadWithData};
+
 // Handle for create job
-//
-// This function adds a new job to the system. It takes job information to
-// be created and a reference to the StoreMethods trait object for job. It
-// returns a success response with status 200 if job is created successfully
 #[instrument(level = "info", skip(store))]
 pub async fn create_job(
     store: Arc<dyn StoreMethods + Send + Sync>,
@@ -31,59 +30,38 @@ pub async fn create_job(
             StatusCode::BAD_REQUEST,
         ));
     }
-    let new_job = NewJob {
-        job_name: new_job.job_name,
-        company_id: new_job.company_id,
-        location: new_job.location,
-        quantity: new_job.quantity,
-        salary: new_job.salary,
-        job_level: new_job.job_level,
-        description: new_job.description,
+    let res = store.create_job(new_job).await.map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::Job(res),
     };
-    match store.create_job(new_job).await {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::Job(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::CREATED,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::CREATED,
+    ))
 }
 
 // Handle for retrieving job by ID
-//
-// This function retrieves a job with the specified ID from the system. It takes
-// the ID from query parameters. It returns a JSON response containing the job.
 #[instrument(level = "info", skip(store))]
 pub async fn get_job(
     store: Arc<dyn StoreMethods + Send + Sync>,
     job_id: i32,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    match store.get_job_by_id(JobId(job_id)).await {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::Job(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    let res = store
+        .get_job_by_id(JobId(job_id))
+        .await
+        .map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::Job(res),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handle for retrieving list jobs based on query parameters
-//
-// This function retrieves list jobs based on the provided query parameters. It takes a HashMap
-// containing the query parameters and a reference to the StoreMethod trait object for job.
-// It returns a JSON response containing the list of jobs.
 #[instrument(level = "info", skip(store))]
 pub async fn get_list_job(
     store: Arc<dyn StoreMethods + Send + Sync>,
@@ -93,32 +71,24 @@ pub async fn get_list_job(
     let mut pagination = Pagination::default();
 
     if !params.is_empty() {
-        pagination = <Pagination as PaginationMethods>::extract_pagination(params)?;
+        pagination = Pagination::extract_pagination(params)?;
     }
     // Get list jobs with pagination filters
-    match store
+    let res = store
         .get_list_job(pagination.limit, pagination.offset)
         .await
-    {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::ListJob(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+        .map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::ListJob(res),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handler for updating job.
-//
-// This function updates job. It takes info of the job to be updated
-// from Job and a reference to the StoreMethod trait object for job.
-// It returns a success response with status code 200 if the job update successfully
 #[instrument(level = "info", skip(store))]
 pub async fn update_job(
     store: Arc<dyn StoreMethods + Send + Sync>,
@@ -137,33 +107,24 @@ pub async fn update_job(
             ));
         }
     }
-    match store.update_job(job).await {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::Job(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    let res = store.update_job(job).await.map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::Job(res),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handler for apply job.
-//
-// This function create new map resume vs job. It takes info of relationship of resume and job
-// to be created and a reference to the StoreMethod trait object for MapResumeJob.
-// It returns a success response with status code 200 if the map resume vs job successfully
 #[instrument(level = "info", skip(store))]
 pub async fn apply_job(
     store: Arc<dyn StoreMethods + Send + Sync>,
     claims: Claims,
     new_map_resume_job: NewMapResumeJob,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    // Check authorization apply job of the user
     // Check job status
     if let Ok(res) = store.get_job_by_id(new_map_resume_job.job_id.clone()).await {
         if res.is_delete {
@@ -176,26 +137,21 @@ pub async fn apply_job(
             ));
         }
     }
-    match store.create_map_job_resume(new_map_resume_job).await {
-        Ok(res) => {
-            let payload = PayloadWithData {
-                message: "Success".to_string(),
-                data: Data::MapJobResume(res),
-            };
-            Ok(warp::reply::with_status(
-                warp::reply::json(&payload),
-                StatusCode::OK,
-            ))
-        }
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    let res = store
+        .create_map_job_resume(new_map_resume_job)
+        .await
+        .map_err(Error::from)?;
+    let payload = PayloadWithData {
+        message: "Success".to_string(),
+        data: Data::MapJobResume(res),
+    };
+    Ok(warp::reply::with_status(
+        warp::reply::json(&payload),
+        StatusCode::OK,
+    ))
 }
 
 // Handler for deleting company by ID.
-//
-// This function deletes company with the specified ID from the system. It takes the ID of
-// the company to be deleted from Company and a reference to the StoreMethod trait object. It
-// returns a success response with status code 200 if the company is deleted successfully.
 #[instrument(level = "info", skip(store))]
 pub async fn delete_job(
     store: Arc<dyn StoreMethods + Send + Sync>,
@@ -210,11 +166,12 @@ pub async fn delete_job(
             ));
         }
     }
-    match store.delete_job(job.id.unwrap()).await {
-        Ok(_) => Ok(warp::reply::with_status(
-            "Delete Job Success".to_string(),
-            StatusCode::OK,
-        )),
-        Err(e) => Err(warp::reject::custom(e)),
-    }
+    let _ = store
+        .delete_job(job.id.unwrap())
+        .await
+        .map_err(Error::from)?;
+    Ok(warp::reply::with_status(
+        "Success".to_string(),
+        StatusCode::OK,
+    ))
 }

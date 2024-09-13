@@ -1,24 +1,27 @@
+use std::sync::Arc;
+
+use tokio::sync::{oneshot, oneshot::Sender};
+use tracing::{info, instrument};
+use warp::{http::Method, Filter};
+
 use crate::configs::config::Config;
+use crate::errors::{return_error, Error};
 use crate::models::store_db::DatabaseStore;
 use crate::models::store_in_memory::InMemoryStore;
 use crate::models::store_trait::StoreMethods;
 use crate::routes::company::company_route;
 use crate::routes::job::job_route;
 use crate::routes::resume::resume_route;
-use crate::service::handle_errors::{return_error, Error};
-use crate::service::telemetry::init_telemetry;
-use routes::user::user_route;
-use std::sync::Arc;
-use tokio::sync::{oneshot, oneshot::Sender};
-use tracing::{info, instrument};
-use warp::{http::Method, Filter};
+use crate::routes::user::user_route;
+use crate::services::telemetry::init_telemetry;
 
 mod configs;
 mod controllers;
+pub mod errors;
 mod middleware;
 mod models;
 mod routes;
-mod service;
+mod services;
 mod tests;
 mod utils;
 
@@ -27,18 +30,18 @@ mod utils;
 async fn main() {
     let config = Config::new().expect("Config env not set");
     let log_filter = format!(
-        "handle_errors={},rust-api-service={},warp={}",
+        "handle_errors={},rust-api-services={},warp={}",
         config.log_level, config.log_level, config.log_level
     );
     init_telemetry(
-        config.service_name.as_str(),
-        config.server.host.as_str(),
+        &config.service_name,
+        &config.server.host,
         &config.server.jaeger_port,
         log_filter.as_str(),
     );
 
     let store = build_store(&config).await;
-    let routes = build_routes(store).await.recover(return_error);
+    let routes = build_routes(store).recover(return_error);
 
     let address_listen = format!("{}:{}", config.server.host, config.server.port);
     let socket: std::net::SocketAddr = address_listen.parse().expect("Not a valid address");
@@ -49,10 +52,7 @@ pub async fn build_store(config: &Config) -> Arc<dyn StoreMethods + Send + Sync>
     let url = config.postgres.url.clone();
 
     let store: Arc<dyn StoreMethods + Send + Sync> =
-        if config.database.clone().unwrap() == *"in-memory".to_string() {
-            info!("Using in-memory database");
-            Arc::new(InMemoryStore::new())
-        } else if config.database.clone().unwrap() == *"postgres".to_string() {
+        if config.database.clone().unwrap() == *"postgres".to_string() {
             info!("Using postgres database");
             // set up database
             let pool = DatabaseStore::new(&url).await;
@@ -69,7 +69,7 @@ pub async fn build_store(config: &Config) -> Arc<dyn StoreMethods + Send + Sync>
     store
 }
 
-pub async fn build_routes(
+pub fn build_routes(
     store: Arc<dyn StoreMethods + Send + Sync>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let cors = warp::cors()
@@ -89,11 +89,11 @@ pub async fn build_routes(
         .with(warp::trace::request())
 }
 
-pub async fn init_mock_server(
+pub async fn init_test_server(
     address_listen: String,
     store: Arc<dyn StoreMethods + Send + Sync>,
 ) -> Sender<i32> {
-    let routes = build_routes(store).await.recover(return_error);
+    let routes = build_routes(store).recover(return_error);
     let (tx, rx) = oneshot::channel::<i32>();
     let socket: std::net::SocketAddr = address_listen.parse().expect("Not a valid address");
 
@@ -105,28 +105,26 @@ pub async fn init_mock_server(
     tx
 }
 
-pub async fn build_store_for_test(config: &Config) -> Arc<dyn StoreMethods + Send + Sync> {
-    let url = config.postgres.url.clone();
+pub async fn build_store_for_test(
+    url: String,
+    database: String,
+    sample_data_url: String,
+) -> Arc<dyn StoreMethods + Send + Sync> {
+    let store: Arc<dyn StoreMethods + Send + Sync> = if database == *"postgres".to_string() {
+        info!("Using postgres database");
+        // set up database
+        let pool = DatabaseStore::new(&url).await;
 
-    let store: Arc<dyn StoreMethods + Send + Sync> =
-        if config.database.clone().unwrap() == *"in-memory".to_string() {
-            info!("Using in-memory database");
-            Arc::new(InMemoryStore::new())
-        } else if config.database.clone().unwrap() == *"postgres".to_string() {
-            info!("Using postgres database");
-            // set up database
-            let pool = DatabaseStore::new(&url).await;
-
-            sqlx::migrate!()
-                .run(&pool.clone().connection)
-                .await
-                .map_err(Error::Migration)
-                .unwrap();
-            let _ = pool.create_sample_data(&config.sample_data_url).await;
-            Arc::new(pool)
-        } else {
-            info!("Using in-memory database");
-            Arc::new(InMemoryStore::new())
-        };
+        sqlx::migrate!()
+            .run(&pool.clone().connection)
+            .await
+            .map_err(Error::Migration)
+            .unwrap();
+        let _ = pool.create_sample_data(&sample_data_url).await;
+        Arc::new(pool)
+    } else {
+        info!("Using in-memory database");
+        Arc::new(InMemoryStore::new())
+    };
     store
 }

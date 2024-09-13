@@ -1,37 +1,30 @@
-use crate::configs::config::Config;
+use std::string::ToString;
+
+use futures_util::FutureExt;
+
 use crate::models::company::{Company, CompanyId, NewCompany};
 use crate::models::job::{Job, JobId, NewJob};
 use crate::models::resume::{NewResume, Resume, ResumeId};
 use crate::models::role::{RoleId, ADMIN_ROLE_ID, HR_ROLE_ID, USER_ROLE_ID};
 use crate::models::user::{AuthInfo, UserId, UserInfo};
-use crate::utils::convert_to_json::PayloadForLogin;
-use crate::{build_store_for_test, init_mock_server};
-use futures_util::FutureExt;
-use tracing_subscriber::fmt::format::FmtSpan;
+use crate::utils::convert_to_json::{Data, PayloadForLogin, PayloadWithData};
+use crate::{build_store_for_test, init_test_server};
 
 #[tokio::test]
 async fn route_test() {
-    let config = Config::new().expect("Config env not set");
-    let address_listen = format!("{}:{}", config.server.host, config.server.port);
-    let store = build_store_for_test(&config).await;
-    let handler = init_mock_server(address_listen, store).await;
+    let server_host: String = "0.0.0.0".to_string();
+    let server_port: u16 = 3030;
+    let url: String = "postgres://postgres:123456@127.0.0.1:5432/postgres".to_string();
+    let database: String = "postgres".to_string();
+    let sample_data_url: String = "migrations/postgres/sample.sql".to_string();
 
-    let log_filter = format!(
-        "handle_errors={},backend={},warp={}",
-        config.log_level, config.log_level, config.log_level
-    );
-
-    tracing_subscriber::fmt()
-        // Use the filter we built above to determine which traces to record.
-        .with_env_filter(log_filter)
-        // Record an event when each span closes. This can be used to time our
-        // routes' durations!
-        .with_span_events(FmtSpan::CLOSE)
-        .init();
+    let address_listen = format!("{}:{}", server_host, server_port);
+    let store = build_store_for_test(url, database, sample_data_url).await;
+    let handler = init_test_server(address_listen, store).await;
 
     let new_user = AuthInfo {
         email: "123321@gmail.com".to_string(),
-        password: "123456".to_string(),
+        hash_password: "123456".to_string(),
     };
 
     print!("Running test user route: POST register success...");
@@ -64,7 +57,14 @@ async fn route_test() {
     };
 
     print!("Running test user route: GET user ...");
-    match std::panic::AssertUnwindSafe(get_user_test())
+    let expect_get_user = UserInfo {
+        id: UserId(1),
+        email: "admin@gmail.com".to_string(),
+        company_id: CompanyId(0),
+        role_id: RoleId(1),
+        is_delete: false,
+    };
+    match std::panic::AssertUnwindSafe(get_user_test(expect_get_user))
         .catch_unwind()
         .await
     {
@@ -109,7 +109,7 @@ async fn route_test() {
     print!("Running test user route: Put update password user ...");
     let user_update_pass = AuthInfo {
         email: "123321@gmail.com".to_string(),
-        password: "123456789".to_string(),
+        hash_password: "123456789".to_string(),
     };
     match std::panic::AssertUnwindSafe(update_password_user_test(
         &access_token_user,
@@ -130,7 +130,7 @@ async fn route_test() {
     let access_token_hr: String;
     let hr_login = AuthInfo {
         email: "hr1@gmail.com".to_string(),
-        password: "123456".to_string(),
+        hash_password: "123456".to_string(),
     };
     match std::panic::AssertUnwindSafe(login_test(&hr_login))
         .catch_unwind()
@@ -168,7 +168,7 @@ async fn route_test() {
     print!("Running test user route: Put update password hr ...");
     let hr_update_pass = AuthInfo {
         email: "hr1@gmail.com".to_string(),
-        password: "123456789".to_string(),
+        hash_password: "123456789".to_string(),
     };
     match std::panic::AssertUnwindSafe(update_password_user_test(&access_token_hr, &hr_update_pass))
         .catch_unwind()
@@ -186,7 +186,7 @@ async fn route_test() {
     let access_token_admin: String;
     let admin_login = AuthInfo {
         email: "admin1@gmail.com".to_string(),
-        password: "123456".to_string(),
+        hash_password: "123456".to_string(),
     };
     match std::panic::AssertUnwindSafe(login_test(&admin_login))
         .catch_unwind()
@@ -224,7 +224,7 @@ async fn route_test() {
     print!("Running test user route: Put update password admin ...");
     let admin_update_pass = AuthInfo {
         email: "admin1@gmail.com".to_string(),
-        password: "123456789".to_string(),
+        hash_password: "123456789".to_string(),
     };
     match std::panic::AssertUnwindSafe(update_password_admin_test(
         &access_token_admin,
@@ -304,7 +304,7 @@ async fn route_test() {
     // For company route test
     let login_test_company = AuthInfo {
         email: "admin@gmail.com".to_string(),
-        password: "123456".to_string(),
+        hash_password: "123456".to_string(),
     };
 
     print!("Running test company route: POST login ...");
@@ -400,7 +400,7 @@ async fn route_test() {
     //For resume route test
     let login_test_resume = AuthInfo {
         email: "user2@gmail.com".to_string(),
-        password: "123456".to_string(),
+        hash_password: "123456".to_string(),
     };
 
     print!("Running test resume route: POST login ...");
@@ -420,7 +420,14 @@ async fn route_test() {
     };
 
     print!("Running test resume route: GET resume ...");
-    match std::panic::AssertUnwindSafe(get_resume_test(&access_token_resume))
+    let expect_get_resume = Resume {
+        id: Some(ResumeId(1)),
+        user_id: UserId(7),
+        email: "user2@gmail.com".to_string(),
+        url: "abcxyz".to_string(),
+        is_delete: false,
+    };
+    match std::panic::AssertUnwindSafe(get_resume_test(&access_token_resume, expect_get_resume))
         .catch_unwind()
         .await
     {
@@ -505,7 +512,7 @@ async fn route_test() {
 
     let login_test_job = AuthInfo {
         email: "hr2@gmail.com".to_string(),
-        password: "123456".to_string(),
+        hash_password: "123456".to_string(),
     };
 
     print!("Running test job route: POST login ...");
@@ -631,20 +638,24 @@ pub async fn login_test(new_user: &AuthInfo) -> String {
 }
 
 // For user
-pub async fn get_user_test() {
+pub async fn get_user_test(expect_data: UserInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/user/getUser/1")
+        .get("http://localhost:3030/api/v1/user/get-user/1")
         .send()
         .await
         .unwrap();
     assert_eq!(res.status(), 200);
+    assert_eq!(
+        res.json::<PayloadWithData>().await.unwrap().data,
+        Data::UserInfo(expect_data)
+    );
 }
 
 pub async fn get_list_user_test() {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/user/listUser?limit=10&offset=0")
+        .get("http://localhost:3030/api/v1/user/list-user?limit=10&offset=0")
         .send()
         .await
         .unwrap();
@@ -654,7 +665,7 @@ pub async fn get_list_user_test() {
 pub async fn update_user_test(access_token: &String, user_info: &UserInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/user/updateUser")
+        .put("http://localhost:3030/api/v1/user/update-user")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -666,7 +677,7 @@ pub async fn update_user_test(access_token: &String, user_info: &UserInfo) {
 pub async fn update_admin_test(access_token: &String, user_info: &UserInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/admin/updateAdmin")
+        .put("http://localhost:3030/api/v1/admin/update-admin")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -678,7 +689,7 @@ pub async fn update_admin_test(access_token: &String, user_info: &UserInfo) {
 pub async fn update_password_user_test(access_token: &String, user_info: &AuthInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/user/updatePassword")
+        .put("http://localhost:3030/api/v1/user/update-password")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -690,7 +701,7 @@ pub async fn update_password_user_test(access_token: &String, user_info: &AuthIn
 pub async fn update_password_admin_test(access_token: &String, user_info: &AuthInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/admin/updatePassword")
+        .put("http://localhost:3030/api/v1/admin/update-password")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -702,7 +713,7 @@ pub async fn update_password_admin_test(access_token: &String, user_info: &AuthI
 pub async fn delete_user_test(access_token: &String, user_info: &UserInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/user/deleteUser")
+        .put("http://localhost:3030/api/v1/user/delete-user")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -714,7 +725,7 @@ pub async fn delete_user_test(access_token: &String, user_info: &UserInfo) {
 pub async fn delete_admin_test(access_token: &String, user_info: &UserInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/admin/deleteAdmin")
+        .put("http://localhost:3030/api/v1/admin/delete-admin")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -726,7 +737,7 @@ pub async fn delete_admin_test(access_token: &String, user_info: &UserInfo) {
 pub async fn set_hr_test(access_token: &String, user_info: &UserInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/admin/setHr")
+        .put("http://localhost:3030/api/v1/admin/set-hr")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -738,7 +749,7 @@ pub async fn set_hr_test(access_token: &String, user_info: &UserInfo) {
 pub async fn set_admin_test(access_token: &String, user_info: &UserInfo) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/admin/setAdmin")
+        .put("http://localhost:3030/api/v1/admin/set-admin")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&user_info)
         .send()
@@ -751,7 +762,7 @@ pub async fn set_admin_test(access_token: &String, user_info: &UserInfo) {
 pub async fn get_company_test() {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/company/getCompany/1")
+        .get("http://localhost:3030/api/v1/company/get-company/1")
         .send()
         .await
         .unwrap();
@@ -761,7 +772,7 @@ pub async fn get_company_test() {
 pub async fn get_list_company_test() {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/company/listCompany?limit=10&offset=0")
+        .get("http://localhost:3030/api/v1/company/list-company?limit=10&offset=0")
         .send()
         .await
         .unwrap();
@@ -771,7 +782,7 @@ pub async fn get_list_company_test() {
 pub async fn create_company_test(access_token: &String, new_company: &NewCompany) {
     let client = reqwest::Client::new();
     let res = client
-        .post("http://localhost:3030/api/v1/company/createCompany")
+        .post("http://localhost:3030/api/v1/company/create-company")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&new_company)
         .send()
@@ -783,7 +794,7 @@ pub async fn create_company_test(access_token: &String, new_company: &NewCompany
 pub async fn update_company_test(access_token: &String, company: &Company) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/company/updateCompany")
+        .put("http://localhost:3030/api/v1/company/update-company")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&company)
         .send()
@@ -795,7 +806,7 @@ pub async fn update_company_test(access_token: &String, company: &Company) {
 pub async fn delete_company_test(access_token: &String, company: &Company) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/company/deleteCompany")
+        .put("http://localhost:3030/api/v1/company/delete-company")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&company)
         .send()
@@ -808,7 +819,7 @@ pub async fn delete_company_test(access_token: &String, company: &Company) {
 pub async fn get_job_test() {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/job/getJob/1")
+        .get("http://localhost:3030/api/v1/job/get-job/1")
         .send()
         .await
         .unwrap();
@@ -818,7 +829,7 @@ pub async fn get_job_test() {
 pub async fn get_list_job_test() {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/job/listJob?limit=10&offset=0")
+        .get("http://localhost:3030/api/v1/job/list-job?limit=10&offset=0")
         .send()
         .await
         .unwrap();
@@ -828,7 +839,7 @@ pub async fn get_list_job_test() {
 pub async fn create_job_test(access_token: &String, new_job: &NewJob) {
     let client = reqwest::Client::new();
     let res = client
-        .post("http://localhost:3030/api/v1/job/createJob")
+        .post("http://localhost:3030/api/v1/job/create-job")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&new_job)
         .send()
@@ -840,7 +851,7 @@ pub async fn create_job_test(access_token: &String, new_job: &NewJob) {
 pub async fn update_job_test(access_token: &String, job: &Job) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/job/updateJob")
+        .put("http://localhost:3030/api/v1/job/update-job")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&job)
         .send()
@@ -852,7 +863,7 @@ pub async fn update_job_test(access_token: &String, job: &Job) {
 pub async fn delete_job_test(access_token: &String, job: &Job) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/job/deleteJob")
+        .put("http://localhost:3030/api/v1/job/delete-job")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&job)
         .send()
@@ -862,21 +873,25 @@ pub async fn delete_job_test(access_token: &String, job: &Job) {
 }
 
 //For resume route test
-pub async fn get_resume_test(access_token: &String) {
+pub async fn get_resume_test(access_token: &String, expect_data: Resume) {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/resume/getResume/1")
+        .get("http://localhost:3030/api/v1/resume/get-resume/1")
         .header("Authorization", format!("Bearer{}", access_token))
         .send()
         .await
         .unwrap();
     assert_eq!(res.status(), 200);
+    assert_eq!(
+        res.json::<PayloadWithData>().await.unwrap().data,
+        Data::Resume(expect_data)
+    );
 }
 
 pub async fn get_list_resume_user_test(access_token: &String) {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:3030/api/v1/resume/listResumeByUser?limit=10&offset=0")
+        .get("http://localhost:3030/api/v1/resume/list-resume-by-user?limit=10&offset=0")
         .header("Authorization", format!("Bearer{}", access_token))
         .send()
         .await
@@ -888,7 +903,7 @@ pub async fn get_list_resume_job_test(job_id: JobId) {
     let client = reqwest::Client::new();
     let res = client
         .get(format!(
-            "http://localhost:3030/api/v1/resume/listResumeByJob?limit=10&offset=0&jobId={}",
+            "http://localhost:3030/api/v1/resume/list-resume-by-job?limit=10&offset=0&jobId={}",
             job_id.0
         ))
         .send()
@@ -900,7 +915,7 @@ pub async fn get_list_resume_job_test(job_id: JobId) {
 pub async fn create_resume_test(access_token: &String, new_resume: &NewResume) {
     let client = reqwest::Client::new();
     let res = client
-        .post("http://localhost:3030/api/v1/resume/createResume")
+        .post("http://localhost:3030/api/v1/resume/create-resume")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&new_resume)
         .send()
@@ -912,7 +927,7 @@ pub async fn create_resume_test(access_token: &String, new_resume: &NewResume) {
 pub async fn update_resume_test(access_token: &String, resume: &Resume) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/resume/updateResume")
+        .put("http://localhost:3030/api/v1/resume/update-resume")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&resume)
         .send()
@@ -924,7 +939,7 @@ pub async fn update_resume_test(access_token: &String, resume: &Resume) {
 pub async fn delete_resume_test(access_token: &String, resume: &Resume) {
     let client = reqwest::Client::new();
     let res = client
-        .put("http://localhost:3030/api/v1/resume/deleteResume")
+        .put("http://localhost:3030/api/v1/resume/delete-resume")
         .header("Authorization", format!("Bearer{}", access_token))
         .json(&resume)
         .send()

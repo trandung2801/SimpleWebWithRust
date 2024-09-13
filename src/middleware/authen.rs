@@ -1,5 +1,3 @@
-use crate::service::handle_errors::Error;
-use crate::service::jwt::{Claims, Jwt, JwtActions};
 use chrono::Utc;
 use tracing::{event, Level};
 use warp::{
@@ -7,6 +5,9 @@ use warp::{
     http::header::{HeaderMap, HeaderValue, AUTHORIZATION},
     Filter,
 };
+
+use crate::errors::Error;
+use crate::services::jwt::{Claims, Jwt, JwtActions};
 
 const BEARER: &str = "Bearer";
 
@@ -31,25 +32,19 @@ async fn authorize(
     (role_id, headers): (i32, HeaderMap<HeaderValue>),
 ) -> Result<Claims, warp::Rejection> {
     // Get access token from headers
-    match jwt_from_header(&headers) {
-        Ok(token) => match Jwt::verify_access_token(&token) {
-            Ok(claims) => {
-                let current_date_time = Utc::now();
-                if claims.is_delete {
-                    return Err(warp::reject());
-                }
-                if claims.exp < current_date_time.timestamp() as usize {
-                    return Err(warp::reject());
-                }
-                if claims.role_id.0 != role_id {
-                    return Err(warp::reject());
-                };
-                Ok(claims)
-            }
-            Err(e) => Err(warp::reject::custom(e)),
-        },
-        Err(e) => Err(warp::reject::custom(e)),
+    let token = jwt_from_header(&headers).map_err(Error::from)?;
+    let claims = Jwt::verify_access_token(&token).map_err(Error::from)?;
+    let current_date_time = Utc::now();
+    if claims.is_delete {
+        return Err(warp::reject());
     }
+    if claims.exp < current_date_time.timestamp() as usize {
+        return Err(warp::reject());
+    }
+    if claims.role_id.0 != role_id {
+        return Err(warp::reject());
+    };
+    Ok(claims)
 }
 
 // Handle takes jwt token from header

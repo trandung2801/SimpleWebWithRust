@@ -1,7 +1,8 @@
-use crate::models::user::UserId;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+use crate::models::user::UserId;
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Resume {
     pub id: Option<ResumeId>,
     pub user_id: UserId,
@@ -13,7 +14,7 @@ pub struct Resume {
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ResumeId(pub i32);
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct NewResume {
     pub user_id: UserId,
     pub email: String,

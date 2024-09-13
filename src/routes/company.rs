@@ -1,11 +1,13 @@
+use std::sync::Arc;
+
+use warp::Filter;
+
 use crate::controllers::company::{
     create_company, delete_company, get_company, get_list_company, update_company,
 };
 use crate::middleware::authen::auth;
 use crate::models::role::ADMIN_ROLE_ID;
 use crate::models::store_trait::StoreMethods;
-use std::sync::Arc;
-use warp::Filter;
 
 // Configures and returns the Warp filter for handling HTTP requests of company
 pub fn company_route(
@@ -21,7 +23,7 @@ pub fn company_route(
 
     //POST api/v1/company/createCompany
     let create_api = company_path
-        .and(warp::path("createCompany"))
+        .and(warp::path("create-company"))
         .and(warp::path::end())
         .and(warp::post())
         .and(store_filter.clone())
@@ -32,7 +34,7 @@ pub fn company_route(
     //GET api/v1/company/listCompany?limit=x&offset=y
     let get_list_company_api = company_path
         .and(warp::get())
-        .and(warp::path("listCompany"))
+        .and(warp::path("list-company"))
         .and(store_filter.clone())
         .and(warp::path::end())
         .and(warp::query())
@@ -41,7 +43,7 @@ pub fn company_route(
     //GET api/v1/company/getCompany/:id
     let get_company_api = company_path
         .and(warp::get())
-        .and(warp::path("getCompany"))
+        .and(warp::path("get-company"))
         .and(store_filter.clone())
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
@@ -49,7 +51,7 @@ pub fn company_route(
 
     //PUT api/v1/company/updateCompany
     let update_company_api = company_path
-        .and(warp::path("updateCompany"))
+        .and(warp::path("update-company"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
@@ -59,7 +61,7 @@ pub fn company_route(
 
     //PUT api/v1/company/deleteCompany
     let delete_company_api = company_path
-        .and(warp::path("deleteCompany"))
+        .and(warp::path("delete-company"))
         .and(warp::path::end())
         .and(warp::put())
         .and(store_filter.clone())
