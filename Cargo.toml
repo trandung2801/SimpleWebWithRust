@@ -30,7 +30,7 @@ sqlx = { version = "0.5", features = [
   "postgres",
 ] }
 thiserror = "1.0"
-tokio = { version = "1.1.1", features = ["full"] }
+tokio = { version = "1.40.0", features = ["full"] }
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-bunyan-formatter = { version = "0.3.9" }
 tracing-opentelemetry = { version = "0.25.0" }
