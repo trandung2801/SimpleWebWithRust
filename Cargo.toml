@@ -7,7 +7,7 @@ version = "0.1.0"
 anyhow = "1.0"
 async-trait = "0.1.81"
 chrono = "0.4.19"
-clap = { version = "3.1.7", features = ["derive"] }
+clap = { version = "4.5.20", features = ["derive"] }
 config = "0.14.0"
 dotenv = "0.15.0"
 futures-util = "0.3"
